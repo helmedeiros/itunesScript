@@ -2,6 +2,7 @@
 source $(dirname $0)/builtin/play.sh
 source $(dirname $0)/builtin/pause.sh
 source $(dirname $0)/builtin/next.sh
+source $(dirname $0)/builtin/previous.sh
 source $(dirname $0)/builtin/quit.sh
 
 # Open Itunes Command
@@ -25,6 +26,11 @@ function cmd_pause(){
 function cmd_next(){
 	echo "Changing to the next song";
 	next;
+}
+
+function cmd_prev(){
+	echo "Changing back to the previous song";
+	prev;
 }
 
 # Quit iTunes

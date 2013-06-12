@@ -30,6 +30,8 @@ function handle_options(){
 					break ;;
 			"next"		) cmd_next
 					break ;;
+			"prev"		) cmd_prev
+					break ;;
 			"quit"		) cmd_quit
 					break ;;
 			"--version"	) version;
