@@ -5,13 +5,13 @@
 #Main script to manage input options.
 
 source $(dirname $0)/help
+source $(dirname $0)/commands
 
 version='1.0'
 progname=`basename $0`
 itunes_script_usage_string="$progname [--version] [--help] <command> [<args>]";
 
 #  Version and help.
-
 function version() {
     echo "$progname version $version"
 }
@@ -20,9 +20,15 @@ function handle_options(){
 	while [ $# -gt 0 ]; do
 	    arg=$1;
 		case $arg in
-			"version" ) version;
+			"open"		) cmd_open;
 	            break;;
-			"help" | * ) list_common_cmds_help;
+			"play"		) cmd_play
+				break ;;
+			"stop"		) cmd_stop
+					break ;;
+			"--version"	) version;
+	            break;;
+			"--help" | *) list_common_cmds_help;
 				break;;
 		esac
 	done
