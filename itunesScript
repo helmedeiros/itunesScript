@@ -4,8 +4,8 @@
 #
 #Main script to manage input options.
 
-source $(dirname $0)/help
-source $(dirname $0)/commands
+source $(dirname $0)/help.sh
+source $(dirname $0)/commands.sh
 
 version='1.0'
 progname=`basename $0`
