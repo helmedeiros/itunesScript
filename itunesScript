@@ -24,6 +24,8 @@ function handle_options(){
 	            break;;
 			"play"		) cmd_play $2
 				break ;;
+			"pause"		) cmd_pause
+				break ;;
 			"stop"		) cmd_stop
 					break ;;
 			"--version"	) version;
