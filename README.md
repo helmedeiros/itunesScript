@@ -19,7 +19,7 @@ Next, you need to make the command executable:
     
 Now, create a symbolic link to this script in the path, /usr/bin like below:
 
-    ln -s /Users/<user name>/<folder of cloned project>/itunesScript /usr/bin/itunesScript
+    ln -s /Users/<user name>/<folder of cloned project>/itunesScript.sh /usr/bin/itunesScript
 
 
 ### Starting It Up
