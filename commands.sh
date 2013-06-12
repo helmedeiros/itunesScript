@@ -1,6 +1,7 @@
 #!/bin/sh
 source $(dirname $0)/builtin/play.sh
 source $(dirname $0)/builtin/pause.sh
+source $(dirname $0)/builtin/quit.sh
 
 # Open Itunes Command
 function cmd_open(){
@@ -20,6 +21,11 @@ function cmd_pause(){
 	pausing;
 }
 
+# Quit iTunes
+function cmd_quit(){
+	echo "Quiting iTunes.";
+	quiting;
+}
 
 # Stop song in iTunes
 function cmd_stop(){
