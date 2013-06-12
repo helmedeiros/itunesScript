@@ -1,4 +1,5 @@
 #!/bin/sh
+source $(dirname $0)/builtin/play.sh
 
 # Open Itunes Command
 function cmd_open(){
@@ -9,7 +10,7 @@ function cmd_open(){
 # Play song in iTunes
 function cmd_play(){
 	echo "Playing iTunes.";
-	osascript -e 'tell application "iTunes" to play';
+	playing $1;
 }
 
 # Stop song in iTunes
