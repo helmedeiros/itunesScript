@@ -1,5 +1,6 @@
 #!/bin/sh
 source $(dirname $0)/builtin/play.sh
+source $(dirname $0)/builtin/pause.sh
 
 # Open Itunes Command
 function cmd_open(){
@@ -12,6 +13,13 @@ function cmd_play(){
 	echo "Playing iTunes.";
 	playing $1;
 }
+
+# Pause song in iTunes
+function cmd_pause(){
+	echo "Pausing iTunes.";
+	pausing;
+}
+
 
 # Stop song in iTunes
 function cmd_stop(){
