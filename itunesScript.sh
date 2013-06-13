@@ -25,6 +25,10 @@ function handle_options(){
 				break ;;
 				"prev"		) cmd_prev
 				break ;;
+				"mute"		) cmd_mute
+				break ;;
+				"unmute"	) cmd_unmute
+				break;;
 				"stop"		) cmd_stop
 				break ;;
 				"quit"		) cmd_quit
