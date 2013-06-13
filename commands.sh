@@ -1,4 +1,6 @@
 #!/bin/sh
+#
+# itunesScript commands gateway.
 source $(dirname $0)/builtin/play.sh
 source $(dirname $0)/builtin/pause.sh
 source $(dirname $0)/builtin/quit.sh
