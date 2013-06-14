@@ -47,12 +47,17 @@ function cmd_mute(){
 }
 
 function cmd_unmute(){
-	echo "Taking iTunes from mute."
+	echo "Taking iTunes from mute.";
 	unmutting;
 }
 
 function cmd_vol(){
-	echo "Increasing iTunes volume."
+	if [ $1 = "up" ]; then
+		echo "Increasing iTunes volume.";
+	else
+		echo "Decrease iTunes volume.";
+	fi
+		
 	vol $1;
 }
 
