@@ -2,8 +2,7 @@
 #
 # "itunesScript vol" builtin command.
 function vol(){
-	volume;
-	my_volume=$?;
+	which_volume; my_volume=$?;
 	
 	if [ $1 = "up" ] || [ $1 = "down" ]; then
 		if [ $1 = "up" ]; then
@@ -27,14 +26,12 @@ function change_volume(){
 	osascript -e "tell application \"iTunes\" to set sound volume to $new_volume";
 }
 
-function volume(){
+function which_volume(){
 	my_volume=`osascript -e 'tell application "iTunes" to sound volume as integer'`;
 	return "$my_volume"
 }
 
 function increase_or_decrease(){
-	echo "iTunes volume: $new_volume";
-	
 	if [ $old_volume -lt $new_volume ]; then
 		echo "Increasing iTunes volume.";
 	else
