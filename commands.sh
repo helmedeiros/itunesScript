@@ -7,6 +7,7 @@ source $(dirname $0)/builtin/next.sh
 source $(dirname $0)/builtin/previous.sh
 source $(dirname $0)/builtin/mute.sh
 source $(dirname $0)/builtin/unmute.sh
+source $(dirname $0)/builtin/vol.sh
 source $(dirname $0)/builtin/stop.sh
 source $(dirname $0)/builtin/quit.sh
 
@@ -46,8 +47,18 @@ function cmd_mute(){
 }
 
 function cmd_unmute(){
-	echo "Taking iTunes from mute."
+	echo "Taking iTunes from mute.";
 	unmutting;
+}
+
+function cmd_vol(){
+	if [ $1 = "up" ]; then
+		echo "Increasing iTunes volume.";
+	else
+		echo "Decrease iTunes volume.";
+	fi
+		
+	vol $1;
 }
 
 # Stop song in iTunes
