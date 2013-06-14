@@ -27,3 +27,7 @@ Now, create a symbolic link to this script in the path, /usr/bin like below:
 Open a new terminal and type the following line:
 
     itunesScript open
+    
+After that you can play the first music of your iTunes library:
+
+    itunesScript play
