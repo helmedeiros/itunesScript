@@ -17,19 +17,23 @@ function handle_options(){
 			case $arg in
 				"open"		) cmd_open;
 				break;;
-				"play"		) cmd_play $2
+				"play"		) cmd_play $2;
 				break ;;
-				"pause"		) cmd_pause
+				"pause"		) cmd_pause;
 				break ;;
-				"next"		) cmd_next
+				"next"		) cmd_next;
 				break ;;
-				"prev"		) cmd_prev
+				"prev"		) cmd_prev;
 				break ;;
-				"mute"		) cmd_mute
+				"mute"		) cmd_mute;
 				break ;;
-				"stop"		) cmd_stop
+				"unmute"	) cmd_unmute;
 				break ;;
-				"quit"		) cmd_quit
+				"vol"		) cmd_vol $2;
+				break;;
+				"stop"		) cmd_stop;
+				break ;;
+				"quit"		) cmd_quit;
 				break ;;
 				"--version"	) version;
 				break;;
