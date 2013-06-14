@@ -27,8 +27,6 @@ function handle_options(){
 				break ;;
 				"mute"		) cmd_mute
 				break ;;
-				"unmute"	) cmd_unmute
-				break;;
 				"stop"		) cmd_stop
 				break ;;
 				"quit"		) cmd_quit

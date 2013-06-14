@@ -15,7 +15,7 @@ First, clone down the repository:
     
 Next, you need to make the command executable:
 
-    chmod +x itunesScript
+    chmod +x itunesScript.sh
     
 Now, create a symbolic link to this script in the path, /usr/bin like below:
 
