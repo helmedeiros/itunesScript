@@ -52,13 +52,15 @@ function cmd_unmute(){
 }
 
 function cmd_vol(){
-	if [ $1 = "up" ]; then
-		echo "Increasing iTunes volume.";
-	else
-		echo "Decrease iTunes volume.";
-	fi
-		
-	vol $1;
+	volume;
+	old_volume=$?;
+	
+	vol $1;	
+	
+	volume;
+	new_volume=$?;
+	
+	increase_or_decrease $old_volume $new_volume;	
 }
 
 # Stop song in iTunes
