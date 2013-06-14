@@ -52,13 +52,12 @@ function cmd_unmute(){
 }
 
 function cmd_vol(){
-	volume;
-	old_volume=$?;
+	which_volume; old_volume=$?;
 	
 	vol $1;	
 	
-	volume;
-	new_volume=$?;
+	which_volume; new_volume=$?;
+	echo "iTunes volume: $new_volume";
 	
 	increase_or_decrease $old_volume $new_volume;	
 }
