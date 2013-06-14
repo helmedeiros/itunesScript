@@ -1,8 +1,13 @@
 #!/bin/sh
+#
+# itunesScript commands gateway.
 source $(dirname $0)/builtin/play.sh
 source $(dirname $0)/builtin/pause.sh
 source $(dirname $0)/builtin/next.sh
 source $(dirname $0)/builtin/previous.sh
+source $(dirname $0)/builtin/mute.sh
+source $(dirname $0)/builtin/unmute.sh
+source $(dirname $0)/builtin/stop.sh
 source $(dirname $0)/builtin/quit.sh
 
 # Open Itunes Command
@@ -23,24 +28,36 @@ function cmd_pause(){
 	pausing;
 }
 
+# Next song in iTunes
 function cmd_next(){
-	echo "Changing to the next song";
+	echo "Changing to the next song.";
 	next;
 }
 
+# Previous song in iTunes
 function cmd_prev(){
-	echo "Changing back to the previous song";
+	echo "Changing back to the previous song.";
 	prev;
+}
+
+function cmd_mute(){
+	echo "Putting iTunes on mute.";
+	mutting;
+}
+
+function cmd_unmute(){
+	echo "Taking iTunes from mute."
+	unmutting;
+}
+
+# Stop song in iTunes
+function cmd_stop(){
+	echo "Stopping iTunes.";
+	stopping;
 }
 
 # Quit iTunes
 function cmd_quit(){
 	echo "Quiting iTunes.";
 	quiting;
-}
-
-# Stop song in iTunes
-function cmd_stop(){
-	echo "Stopping2 iTunes.";
-	osascript -e 'tell application "iTunes" to stop';
 }
