@@ -17,6 +17,11 @@ function cmd_open(){
 	open -a iTunes;
 }
 
+function cmd_status(){
+	state=`osascript -e 'tell application "iTunes" to player state as string'`;
+	echo "iTunes is currently $state.";
+}
+
 # Play song in iTunes
 function cmd_play(){
 	echo "Playing iTunes.";

@@ -31,6 +31,8 @@ function handle_options(){
 				break ;;
 				"vol"		) cmd_vol $2;
 				break;;
+				"status"	) cmd_status;
+				break;;
 				"stop"		) cmd_stop;
 				break ;;
 				"quit"		) cmd_quit;
