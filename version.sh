@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # itunesScript version definition.
-version='1.0'
+version='1.1'
 progname=`basename $0`
 
 #  Version and help.
