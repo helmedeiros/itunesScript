@@ -2,6 +2,7 @@
 #
 # itunesScript commands gateway.
 source $(dirname $0)/builtin/play.sh
+source $(dirname $0)/builtin/status.sh
 source $(dirname $0)/builtin/pause.sh
 source $(dirname $0)/builtin/next.sh
 source $(dirname $0)/builtin/previous.sh
@@ -20,6 +21,7 @@ function cmd_open(){
 function cmd_status(){
 	state=`osascript -e 'tell application "iTunes" to player state as string'`;
 	echo "iTunes is currently $state.";
+	status $state;
 }
 
 # Play song in iTunes
