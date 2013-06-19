@@ -19,8 +19,9 @@ function list_common_cmds_help(){
 	echo "    prev		Back to the previous iTunes musics.";
 	echo "    mute		Mute iTunes.";
     echo "    unmute		Unmute iTunes.";
-	echo "    vol up		Increase iTunes vol."
-	echo "    vol down		Decrease iTunes vol."
+	echo "    vol up		Increase iTunes vol by 10%."
+	echo "    vol down		Decrease iTunes vol by 10%."
+	echo "    vol #		Change iTunes vol to # [0-100%]."
 	echo "    stop		Stop iTunes.";
 	echo "    quit		Quit iTunes.";
 }
