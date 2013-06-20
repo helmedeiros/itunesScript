@@ -5,6 +5,10 @@ Shell script project to control itunes from console.
 
 ## Installation
 
+### OS X
+
+iTunesScript is built for the Mac.
+
 ### Setup
 
 iTunesScript has some parts, but I've tried to simplify installation - as much as I could!
