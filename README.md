@@ -19,11 +19,15 @@ First, clone down the repository:
     
 Next, you need to make the command executable:
 
-    chmod +x itunesScript.sh
+    chmod +x itunesScript
     
-Now, create a symbolic link to this script in the path, /usr/bin like below:
+To make sure my shell knows where to find iTunesScript you will need to add the addres from where you've cloned the project to your .bashrc file's PATH variable. Here's how mine looks
 
-    ln -s /Users/<user name>/<folder of cloned project>/itunesScript.sh /usr/bin/itunesScript
+    export PATH=${PATH}:/Users/helmed/Projects/workspaceShell/itunesScript/
+    
+Make sure you reload your shell with
+
+    source ~/.bashrc
 
 
 ### Starting It Up
