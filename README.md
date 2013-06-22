@@ -43,3 +43,11 @@ After that, you can start playing the first music of your iTunes library:
 or another one from a specific artist:
 
     itunesScript play Maroon 5
+
+### Changing the volume
+
+You can change the volume:
+
+    itunesScript vol up
+    itunesScript vol down
+    itunesScript vol 50
