@@ -3,6 +3,7 @@
 # itunesScript commands gateway.
 source $(dirname $0)/builtin/play.sh
 source $(dirname $0)/builtin/status.sh
+source $(dirname $0)/builtin/shuffle.sh
 source $(dirname $0)/builtin/pause.sh
 source $(dirname $0)/builtin/next.sh
 source $(dirname $0)/builtin/previous.sh
@@ -14,7 +15,7 @@ source $(dirname $0)/builtin/quit.sh
 
 # Open Itunes Command
 function cmd_open(){
-	echo "Starting iTunes.";
+	echo "Opening iTunes.";
 	open -a iTunes;
 }
 
@@ -22,6 +23,11 @@ function cmd_status(){
 	state=`osascript -e 'tell application "iTunes" to player state as string'`;
 	echo "iTunes is currently $state.";
 	status $state;
+}
+
+function cmd_shuffle(){
+	echo "Playing iTunes on shuffle mode;";
+	shuffle;
 }
 
 # Play song in iTunes

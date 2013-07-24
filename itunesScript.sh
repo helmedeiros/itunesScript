@@ -33,6 +33,8 @@ function handle_options(){
 				break;;
 				"status"	) cmd_status;
 				break;;
+				"shuffle"	) cmd_shuffle;
+				break;;
 				"stop"		) cmd_stop;
 				break ;;
 				"quit"		) cmd_quit;
