@@ -1,53 +1,33 @@
-iTunesScript
-============
+# itunesScript
 
-Shell script project to control itunes from console.
+A shell project to control **iTunes** from the console on macOS.
 
-## Installation
+It wraps AppleScript behind a small command dispatcher so playback can be driven
+from the terminal — handy for hotkeys, remote shells, or scripting your music
+without leaving the keyboard.
 
-### OS X
+## Commands
 
-iTunesScript is built for the Mac.
+Built-in commands live under `builtin/`:
 
-### Setup
+| Command    | Action                          |
+| ---------- | ------------------------------- |
+| `play` / `pause` / `stop` | Transport controls.  |
+| `next` / `previous`       | Skip between tracks. |
+| `mute` / `unmute` / `vol` | Volume controls.     |
+| `shuffle`                 | Toggle shuffle.      |
+| `status`                  | Show what's playing. |
+| `quit`                    | Quit iTunes.         |
 
-iTunesScript has some parts, but I've tried to simplify installation - as much as I could!
+## Install
 
-First, clone down the repository:
+```sh
+git clone https://github.com/helmedeiros/itunesScript.git
+chmod +x itunesScript.sh
+```
 
-    git clone https://github.com/helmedeiros/itunesScript.git
-    
-Next, you need to make the command executable:
+Add the clone directory to your `PATH` so the command is available everywhere.
 
-    chmod +x itunesScript
-    
-To make sure my shell knows where to find iTunesScript you will need to add the addres from where you've cloned the project to your .bashrc file's PATH variable. Here's how mine looks
+## License
 
-    export PATH=${PATH}:/Users/helmed/Projects/workspaceShell/itunesScript/
-    
-Make sure you reload your shell with
-
-    source ~/.bashrc
-
-
-### Starting It Up
-
-Open a new terminal and type the following line:
-
-    itunesScript open
-    
-After that, you can start playing the first music of your iTunes library:
-
-    itunesScript play
-
-or another one from a specific artist:
-
-    itunesScript play Maroon 5
-
-### Changing the volume
-
-You can change the volume:
-
-    itunesScript vol up
-    itunesScript vol down
-    itunesScript vol 50
+[MIT](LICENSE)
