@@ -31,4 +31,8 @@ type Player interface {
 
 	// SetVolume sets the sound volume.
 	SetVolume(ctx context.Context, v music.Volume) error
+	// SetShuffle enables or disables shuffle.
+	SetShuffle(ctx context.Context, enabled bool) error
+	// SetRepeat sets the repeat mode.
+	SetRepeat(ctx context.Context, mode music.RepeatMode) error
 }

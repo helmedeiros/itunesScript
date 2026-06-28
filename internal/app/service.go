@@ -56,6 +56,31 @@ func (s *Service) SetVolume(ctx context.Context, level int) (music.Volume, error
 	return v, nil
 }
 
+// SetShuffle enables or disables shuffle.
+func (s *Service) SetShuffle(ctx context.Context, enabled bool) error {
+	return s.player.SetShuffle(ctx, enabled)
+}
+
+// ToggleShuffle flips shuffle relative to its current state and returns the new
+// value. The current state is read first; if that read fails, no change is made.
+func (s *Service) ToggleShuffle(ctx context.Context) (bool, error) {
+	status, err := s.player.Status(ctx)
+	if err != nil {
+		return false, fmt.Errorf("read shuffle: %w", err)
+	}
+
+	enabled := !status.Shuffle
+	if err := s.player.SetShuffle(ctx, enabled); err != nil {
+		return false, fmt.Errorf("set shuffle: %w", err)
+	}
+	return enabled, nil
+}
+
+// SetRepeat sets the repeat mode.
+func (s *Service) SetRepeat(ctx context.Context, mode music.RepeatMode) error {
+	return s.player.SetRepeat(ctx, mode)
+}
+
 // AdjustVolume shifts the current volume by delta, clamped to the valid range,
 // and returns the new level. The current volume is read first; if that read
 // fails, no change is applied.

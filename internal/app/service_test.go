@@ -15,11 +15,13 @@ import (
 // fakePlayer is a hand-rolled in-memory Player for testing the service in
 // isolation from any real engine.
 type fakePlayer struct {
-	status    music.Status
-	statusErr error
-	volumeSet *music.Volume
-	calls     []string
-	setVolErr error
+	status     music.Status
+	statusErr  error
+	volumeSet  *music.Volume
+	shuffleSet *bool
+	repeatSet  *music.RepeatMode
+	calls      []string
+	setVolErr  error
 }
 
 func (f *fakePlayer) Status(context.Context) (music.Status, error) {
@@ -47,6 +49,18 @@ func (f *fakePlayer) SetVolume(_ context.Context, v music.Volume) error {
 		return f.setVolErr
 	}
 	f.volumeSet = &v
+	return nil
+}
+
+func (f *fakePlayer) SetShuffle(_ context.Context, enabled bool) error {
+	f.calls = append(f.calls, "SetShuffle")
+	f.shuffleSet = &enabled
+	return nil
+}
+
+func (f *fakePlayer) SetRepeat(_ context.Context, mode music.RepeatMode) error {
+	f.calls = append(f.calls, "SetRepeat")
+	f.repeatSet = &mode
 	return nil
 }
 
@@ -123,4 +137,56 @@ func TestServiceAdjustVolumeSurfacesStatusError(t *testing.T) {
 
 	require.ErrorIs(t, err, boom)
 	assert.NotContains(t, fake.calls, "SetVolume", "must not set volume if read failed")
+}
+
+func TestServiceSetShuffle(t *testing.T) {
+	t.Parallel()
+
+	fake := &fakePlayer{}
+	svc := app.NewService(fake)
+
+	require.NoError(t, svc.SetShuffle(context.Background(), true))
+
+	require.NotNil(t, fake.shuffleSet)
+	assert.True(t, *fake.shuffleSet)
+}
+
+func TestServiceToggleShuffleFlipsCurrent(t *testing.T) {
+	t.Parallel()
+
+	fake := &fakePlayer{status: music.Status{Shuffle: true}}
+	svc := app.NewService(fake)
+
+	now, err := svc.ToggleShuffle(context.Background())
+
+	require.NoError(t, err)
+	assert.False(t, now, "true should flip to false")
+	require.NotNil(t, fake.shuffleSet)
+	assert.False(t, *fake.shuffleSet)
+	assert.Equal(t, []string{"Status", "SetShuffle"}, fake.calls)
+}
+
+func TestServiceToggleShuffleSurfacesReadError(t *testing.T) {
+	t.Parallel()
+
+	boom := errors.New("read failed")
+	fake := &fakePlayer{statusErr: boom}
+	svc := app.NewService(fake)
+
+	_, err := svc.ToggleShuffle(context.Background())
+
+	require.ErrorIs(t, err, boom)
+	assert.NotContains(t, fake.calls, "SetShuffle")
+}
+
+func TestServiceSetRepeat(t *testing.T) {
+	t.Parallel()
+
+	fake := &fakePlayer{}
+	svc := app.NewService(fake)
+
+	require.NoError(t, svc.SetRepeat(context.Background(), music.RepeatAll))
+
+	require.NotNil(t, fake.repeatSet)
+	assert.Equal(t, music.RepeatAll, *fake.repeatSet)
 }

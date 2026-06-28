@@ -14,11 +14,14 @@ import (
 
 // fakeController records calls and returns canned data.
 type fakeController struct {
-	status   music.Status
-	calls    []string
-	setLevel int
-	adjustBy int
-	volRet   music.Volume
+	status     music.Status
+	calls      []string
+	setLevel   int
+	adjustBy   int
+	volRet     music.Volume
+	shuffleSet bool
+	shuffleRet bool
+	repeatSet  music.RepeatMode
 }
 
 func (f *fakeController) Status(context.Context) (music.Status, error) {
@@ -48,6 +51,23 @@ func (f *fakeController) AdjustVolume(_ context.Context, delta int) (music.Volum
 	f.calls = append(f.calls, "AdjustVolume")
 	f.adjustBy = delta
 	return f.volRet, nil
+}
+
+func (f *fakeController) SetShuffle(_ context.Context, enabled bool) error {
+	f.calls = append(f.calls, "SetShuffle")
+	f.shuffleSet = enabled
+	return nil
+}
+
+func (f *fakeController) ToggleShuffle(context.Context) (bool, error) {
+	f.calls = append(f.calls, "ToggleShuffle")
+	return f.shuffleRet, nil
+}
+
+func (f *fakeController) SetRepeat(_ context.Context, mode music.RepeatMode) error {
+	f.calls = append(f.calls, "SetRepeat")
+	f.repeatSet = mode
+	return nil
 }
 
 func run(t *testing.T, ctrl *fakeController, args ...string) string {
@@ -136,4 +156,67 @@ func TestVolCommandRelative(t *testing.T) {
 
 	assert.Equal(t, []string{"AdjustVolume"}, ctrl.calls)
 	assert.Equal(t, 10, ctrl.adjustBy)
+}
+
+func TestShuffleCommand(t *testing.T) {
+	t.Parallel()
+
+	t.Run("on", func(t *testing.T) {
+		t.Parallel()
+		ctrl := &fakeController{}
+		run(t, ctrl, "shuffle", "on")
+		assert.Equal(t, []string{"SetShuffle"}, ctrl.calls)
+		assert.True(t, ctrl.shuffleSet)
+	})
+
+	t.Run("off", func(t *testing.T) {
+		t.Parallel()
+		ctrl := &fakeController{}
+		run(t, ctrl, "shuffle", "off")
+		assert.Equal(t, []string{"SetShuffle"}, ctrl.calls)
+		assert.False(t, ctrl.shuffleSet)
+	})
+
+	t.Run("toggle is the default with no arg", func(t *testing.T) {
+		t.Parallel()
+		ctrl := &fakeController{shuffleRet: true}
+		out := run(t, ctrl, "shuffle")
+		assert.Equal(t, []string{"ToggleShuffle"}, ctrl.calls)
+		assert.Contains(t, out, "on")
+	})
+}
+
+func TestRepeatCommand(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		arg  string
+		want music.RepeatMode
+	}{
+		{arg: "off", want: music.RepeatOff},
+		{arg: "one", want: music.RepeatOne},
+		{arg: "all", want: music.RepeatAll},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.arg, func(t *testing.T) {
+			t.Parallel()
+			ctrl := &fakeController{}
+			run(t, ctrl, "repeat", tt.arg)
+			assert.Equal(t, []string{"SetRepeat"}, ctrl.calls)
+			assert.Equal(t, tt.want, ctrl.repeatSet)
+		})
+	}
+}
+
+func TestRepeatCommandRejectsUnknownMode(t *testing.T) {
+	t.Parallel()
+
+	var out bytes.Buffer
+	cmd := cli.NewRootCmd(&fakeController{})
+	cmd.SetOut(&out)
+	cmd.SetErr(&out)
+	cmd.SetArgs([]string{"repeat", "sometimes"})
+
+	require.Error(t, cmd.Execute())
 }

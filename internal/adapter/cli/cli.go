@@ -29,9 +29,18 @@ func NewRootCmd(ctrl port.Controller) *cobra.Command {
 		transportCmd(ctrl, "next", "Skip to the next track", port.Controller.Next),
 		transportCmd(ctrl, "prev", "Skip to the previous track", port.Controller.Previous),
 		volCmd(ctrl),
+		shuffleCmd(ctrl),
+		repeatCmd(ctrl),
 	)
 
 	return root
+}
+
+func onOff(enabled bool) string {
+	if enabled {
+		return "on"
+	}
+	return "off"
 }
 
 func statusCmd(ctrl port.Controller) *cobra.Command {
@@ -68,6 +77,63 @@ func transportCmd(ctrl port.Controller, use, short string, action func(port.Cont
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			return action(ctrl, cmd.Context())
+		},
+	}
+}
+
+func shuffleCmd(ctrl port.Controller) *cobra.Command {
+	return &cobra.Command{
+		Use:       "shuffle [on|off|toggle]",
+		Short:     "Turn shuffle on, off, or toggle it (default: toggle)",
+		Args:      cobra.MaximumNArgs(1),
+		ValidArgs: []string{"on", "off", "toggle"},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			action := "toggle"
+			if len(args) == 1 {
+				action = args[0]
+			}
+
+			var (
+				enabled bool
+				err     error
+			)
+			switch action {
+			case "on":
+				enabled, err = true, ctrl.SetShuffle(cmd.Context(), true)
+			case "off":
+				enabled, err = false, ctrl.SetShuffle(cmd.Context(), false)
+			case "toggle":
+				enabled, err = ctrl.ToggleShuffle(cmd.Context())
+			default:
+				return fmt.Errorf("invalid shuffle argument %q: want on, off or toggle", action)
+			}
+			if err != nil {
+				return err
+			}
+
+			fmt.Fprintf(cmd.OutOrStdout(), "shuffle %s\n", onOff(enabled))
+			return nil
+		},
+	}
+}
+
+func repeatCmd(ctrl port.Controller) *cobra.Command {
+	return &cobra.Command{
+		Use:       "repeat <off|one|all>",
+		Short:     "Set the repeat mode",
+		Args:      cobra.ExactArgs(1),
+		ValidArgs: []string{"off", "one", "all"},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			mode, err := music.ParseRepeatMode(args[0])
+			if err != nil {
+				return err
+			}
+			if err := ctrl.SetRepeat(cmd.Context(), mode); err != nil {
+				return err
+			}
+
+			fmt.Fprintf(cmd.OutOrStdout(), "repeat %s\n", mode)
+			return nil
 		},
 	}
 }

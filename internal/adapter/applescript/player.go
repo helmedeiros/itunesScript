@@ -77,6 +77,16 @@ func (p *Player) SetVolume(ctx context.Context, v music.Volume) error {
 	return p.tell(ctx, fmt.Sprintf("set sound volume to %d", v.Int()))
 }
 
+// SetShuffle enables or disables shuffle.
+func (p *Player) SetShuffle(ctx context.Context, enabled bool) error {
+	return p.tell(ctx, fmt.Sprintf("set shuffle enabled to %t", enabled))
+}
+
+// SetRepeat sets the repeat mode.
+func (p *Player) SetRepeat(ctx context.Context, mode music.RepeatMode) error {
+	return p.tell(ctx, "set song repeat to "+mode.String())
+}
+
 // tell runs an AppleScript action against Music.app, discarding its output.
 func (p *Player) tell(ctx context.Context, action string) error {
 	_, err := p.run.Run(ctx, appleScript, tellMusic(action))

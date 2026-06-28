@@ -22,4 +22,11 @@ type Controller interface {
 	SetVolume(ctx context.Context, level int) (music.Volume, error)
 	// AdjustVolume shifts the level by delta and returns the new volume.
 	AdjustVolume(ctx context.Context, delta int) (music.Volume, error)
+
+	// SetShuffle enables or disables shuffle.
+	SetShuffle(ctx context.Context, enabled bool) error
+	// ToggleShuffle flips shuffle and returns the new value.
+	ToggleShuffle(ctx context.Context) (bool, error)
+	// SetRepeat sets the repeat mode.
+	SetRepeat(ctx context.Context, mode music.RepeatMode) error
 }

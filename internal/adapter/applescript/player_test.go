@@ -97,3 +97,49 @@ func TestPlayerSetVolumeScript(t *testing.T) {
 	assert.Equal(t, appleScript, fake.calls[0].lang)
 	assert.Equal(t, tellMusic("set sound volume to 42"), fake.calls[0].script)
 }
+
+func TestPlayerSetShuffleScript(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		enabled bool
+		want    string
+	}{
+		{enabled: true, want: tellMusic("set shuffle enabled to true")},
+		{enabled: false, want: tellMusic("set shuffle enabled to false")},
+	}
+
+	for _, tt := range tests {
+		fake := &fakeRunner{}
+		p := newPlayer(fake)
+
+		require.NoError(t, p.SetShuffle(context.Background(), tt.enabled))
+
+		require.Len(t, fake.calls, 1)
+		assert.Equal(t, appleScript, fake.calls[0].lang)
+		assert.Equal(t, tt.want, fake.calls[0].script)
+	}
+}
+
+func TestPlayerSetRepeatScript(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		mode music.RepeatMode
+		want string
+	}{
+		{mode: music.RepeatOff, want: tellMusic("set song repeat to off")},
+		{mode: music.RepeatOne, want: tellMusic("set song repeat to one")},
+		{mode: music.RepeatAll, want: tellMusic("set song repeat to all")},
+	}
+
+	for _, tt := range tests {
+		fake := &fakeRunner{}
+		p := newPlayer(fake)
+
+		require.NoError(t, p.SetRepeat(context.Background(), tt.mode))
+
+		require.Len(t, fake.calls, 1)
+		assert.Equal(t, tt.want, fake.calls[0].script)
+	}
+}
