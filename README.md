@@ -1,9 +1,8 @@
 # amp
 
-A terminal player for **Apple Music** on macOS, modeled on the `mpd` + `mpc`
-trio: control playback and read what's playing straight from the console —
-handy for hotkeys, remote shells, or scripting your music without leaving the
-keyboard.
+A terminal player for **Apple Music** on macOS: control playback and read what's
+playing straight from the console — handy for hotkeys, remote shells, or
+scripting your music without leaving the keyboard.
 
 `amp` treats **Music.app as the engine** and drives it through AppleScript, so
 there's no playback daemon to run and nothing to configure. The CLI binary is

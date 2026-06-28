@@ -5,9 +5,8 @@
 
 ## Context
 
-Unlike MPD, we are not building a playback engine. macOS already ships one:
-**Music.app** owns playback, the library, playlists, search, ratings, and
-volume. We need to decide how to observe and control it. The options span
+We are not building a playback engine. macOS already ships one: **Music.app**
+owns playback, the library, playlists, search, ratings, and volume. We need to decide how to observe and control it. The options span
 AppleScript/JXA via `osascript`, Apple's private **MediaRemote** framework, and
 system audio capture for a spectrum visualizer.
 
