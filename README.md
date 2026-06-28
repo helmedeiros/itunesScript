@@ -51,6 +51,24 @@ am repeat off | one | all
 
 Run `am --help` for the full command list.
 
+## Shell completion
+
+`am` generates completion scripts for bash, zsh, fish, and PowerShell. The zsh
+and bash scripts complete commands, flags, and arguments dynamically.
+
+```sh
+# zsh — place on your fpath (a directory compinit reads), then restart your shell
+am completion zsh > "${fpath[1]}/_am"
+
+# bash
+am completion bash | sudo tee /etc/bash_completion.d/am >/dev/null
+
+# fish
+am completion fish > ~/.config/fish/completions/am.fish
+```
+
+See `am completion --help` for per-shell details.
+
 ## Architecture
 
 `amp` is built with a hexagonal (ports & adapters) architecture in Go:
