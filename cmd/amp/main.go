@@ -18,7 +18,7 @@ func main() {
 	root := cli.NewRootCmd(svc)
 
 	if err := root.ExecuteContext(context.Background()); err != nil {
-		fmt.Fprintln(os.Stderr, "am:", err)
+		fmt.Fprintln(os.Stderr, "amp:", err)
 		os.Exit(1)
 	}
 }
@@ -30,5 +30,5 @@ func volumeStatePath() string {
 	if err != nil {
 		return ".am-volume"
 	}
-	return filepath.Join(dir, "am", "volume")
+	return filepath.Join(dir, "amp", "volume")
 }

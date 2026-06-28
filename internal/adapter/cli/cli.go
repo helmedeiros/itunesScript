@@ -14,7 +14,7 @@ import (
 // to the command's configured streams so it can be captured in tests.
 func NewRootCmd(ctrl port.Controller) *cobra.Command {
 	root := &cobra.Command{
-		Use:           "am",
+		Use:           "amp",
 		Short:         "Control Apple Music from the terminal",
 		SilenceUsage:  true,
 		SilenceErrors: true,

@@ -45,7 +45,7 @@ build: ## Build all binaries into ./bin
 
 .PHONY: install
 install: ## Install the am binary into $GOPATH/bin
-	$(GO) install ./cmd/am
+	$(GO) install ./cmd/amp
 
 .PHONY: tidy
 tidy: ## Tidy module dependencies
