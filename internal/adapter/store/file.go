@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/helmedeiros/itunesScript/internal/port"
+	"github.com/helmedeiros/amp/internal/port"
 )
 
 // File persists a single volume level as plain text at a given path.

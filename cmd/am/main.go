@@ -7,10 +7,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/helmedeiros/itunesScript/internal/adapter/applescript"
-	"github.com/helmedeiros/itunesScript/internal/adapter/cli"
-	"github.com/helmedeiros/itunesScript/internal/adapter/store"
-	"github.com/helmedeiros/itunesScript/internal/app"
+	"github.com/helmedeiros/amp/internal/adapter/applescript"
+	"github.com/helmedeiros/amp/internal/adapter/cli"
+	"github.com/helmedeiros/amp/internal/adapter/store"
+	"github.com/helmedeiros/amp/internal/app"
 )
 
 func main() {

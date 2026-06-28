@@ -6,8 +6,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/helmedeiros/itunesScript/internal/music"
-	"github.com/helmedeiros/itunesScript/internal/port"
+	"github.com/helmedeiros/amp/internal/music"
+	"github.com/helmedeiros/amp/internal/port"
 )
 
 // NewRootCmd builds the command tree wired to a Controller. Output is written

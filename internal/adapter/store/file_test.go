@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/helmedeiros/itunesScript/internal/adapter/store"
-	"github.com/helmedeiros/itunesScript/internal/port"
+	"github.com/helmedeiros/amp/internal/adapter/store"
+	"github.com/helmedeiros/amp/internal/port"
 )
 
 func TestFileStoreRoundTrip(t *testing.T) {

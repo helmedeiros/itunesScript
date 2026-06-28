@@ -6,8 +6,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/helmedeiros/itunesScript/internal/music"
-	"github.com/helmedeiros/itunesScript/internal/port"
+	"github.com/helmedeiros/amp/internal/music"
+	"github.com/helmedeiros/amp/internal/port"
 )
 
 // DefaultUnmuteVolume is the level unmute restores when no prior level is known.

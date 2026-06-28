@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/helmedeiros/itunesScript/internal/music"
+	"github.com/helmedeiros/amp/internal/music"
 )
 
 // RenderStatus formats a status snapshot for humans, one line per fact.

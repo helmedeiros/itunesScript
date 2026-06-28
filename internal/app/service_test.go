@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/helmedeiros/itunesScript/internal/app"
-	"github.com/helmedeiros/itunesScript/internal/music"
+	"github.com/helmedeiros/amp/internal/app"
+	"github.com/helmedeiros/amp/internal/music"
 )
 
 // fakePlayer is a hand-rolled in-memory Player for testing the service in

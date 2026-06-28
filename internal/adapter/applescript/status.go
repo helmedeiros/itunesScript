@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/helmedeiros/itunesScript/internal/music"
+	"github.com/helmedeiros/amp/internal/music"
 )
 
 // ErrNotRunning is returned when Music.app is not running and therefore has no

@@ -6,7 +6,7 @@ package port
 import (
 	"context"
 
-	"github.com/helmedeiros/itunesScript/internal/music"
+	"github.com/helmedeiros/amp/internal/music"
 )
 
 // Player is the driven port for controlling the music engine (Music.app).

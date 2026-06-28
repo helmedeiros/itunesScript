@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/helmedeiros/itunesScript/internal/adapter/applescript"
+	"github.com/helmedeiros/amp/internal/adapter/applescript"
 )
 
 // TestIntegrationStatus exercises the real osascript path against Music.app.

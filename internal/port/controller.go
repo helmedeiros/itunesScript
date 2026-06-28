@@ -3,7 +3,7 @@ package port
 import (
 	"context"
 
-	"github.com/helmedeiros/itunesScript/internal/music"
+	"github.com/helmedeiros/amp/internal/music"
 )
 
 // Controller is the driving port: the use-case surface that driving adapters
