@@ -18,36 +18,36 @@ const progressBarWidth = 30
 // labelWidth aligns the value column; the longest label is "shuffle" (7).
 const labelWidth = 7
 
-type statusRow struct{ label, value string }
-
 // RenderStatus formats a status snapshot for humans as aligned label/value
-// rows. Playing and paused show the same fields (only the state word differs);
-// stopped/no-track collapses to the state and volume.
-func RenderStatus(s music.Status) string {
-	var rows []statusRow
+// rows, styled by theme. Playing and paused show the same fields (only the
+// state word differs); stopped/no-track collapses to the state and volume.
+//
+// Padding is applied to the plain label before styling, so color codes never
+// disturb column alignment.
+func RenderStatus(s music.Status, theme Theme) string {
+	var lines []string
+
+	pad := func(label string) string { return fmt.Sprintf("%-*s", labelWidth, label) }
+	row := func(styledLabel, value string) {
+		lines = append(lines, strings.TrimRight(styledLabel+"  "+value, " "))
+	}
+
+	stateLabel := theme.state(s.State, pad(s.State.String()))
 
 	if s.HasTrack() {
-		rows = append(rows, statusRow{s.State.String(), artistTitle(s.Track)})
+		row(stateLabel, theme.title(artistTitle(s.Track)))
 		if s.Track.Album != "" {
-			rows = append(rows, statusRow{"album", s.Track.Album})
+			row(theme.label(pad("album")), s.Track.Album)
 		}
-		rows = append(rows,
-			statusRow{"time", timeLine(s)},
-			statusRow{"volume", fmt.Sprintf("%d%%", s.Volume.Int())},
-			statusRow{"shuffle", onOff(s.Shuffle)},
-			statusRow{"repeat", s.Repeat.String()},
-		)
+		row(theme.label(pad("time")), timeLine(s))
+		row(theme.label(pad("volume")), fmt.Sprintf("%d%%", s.Volume.Int()))
+		row(theme.label(pad("shuffle")), onOff(s.Shuffle))
+		row(theme.label(pad("repeat")), s.Repeat.String())
 	} else {
-		rows = append(rows,
-			statusRow{s.State.String(), ""},
-			statusRow{"volume", fmt.Sprintf("%d%%", s.Volume.Int())},
-		)
+		row(stateLabel, "")
+		row(theme.label(pad("volume")), fmt.Sprintf("%d%%", s.Volume.Int()))
 	}
 
-	lines := make([]string, len(rows))
-	for i, r := range rows {
-		lines[i] = strings.TrimRight(fmt.Sprintf("%-*s  %s", labelWidth, r.label, r.value), " ")
-	}
 	return strings.Join(lines, "\n")
 }
 
