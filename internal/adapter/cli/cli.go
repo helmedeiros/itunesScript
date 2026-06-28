@@ -176,7 +176,13 @@ func volCmd(ctrl port.Controller) *cobra.Command {
 		Use:   "vol <n|+n|-n|up|down>",
 		Short: "Get or set the volume",
 		Args:  cobra.ExactArgs(1),
+		// A relative argument like "-20" would otherwise be parsed as flags.
+		DisableFlagParsing: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if args[0] == "-h" || args[0] == "--help" {
+				return cmd.Help()
+			}
+
 			relative, value, err := parseVolumeArg(args[0])
 			if err != nil {
 				return err

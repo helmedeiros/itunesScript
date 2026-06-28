@@ -49,6 +49,17 @@ func TestParseStatusStoppedHasNoTrack(t *testing.T) {
 	assert.False(t, got.HasTrack())
 }
 
+func TestParseStatusNullTrackHasNoTrack(t *testing.T) {
+	t.Parallel()
+
+	raw := []byte(`{"running": true, "state": "paused", "volume": 50, "repeat": "off", "track": null}`)
+
+	got, err := parseStatus(raw)
+
+	require.NoError(t, err)
+	assert.False(t, got.HasTrack())
+}
+
 func TestParseStatusNotRunning(t *testing.T) {
 	t.Parallel()
 

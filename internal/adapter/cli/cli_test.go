@@ -168,6 +168,18 @@ func TestVolCommandRelative(t *testing.T) {
 	assert.Equal(t, 10, ctrl.adjustBy)
 }
 
+func TestVolCommandRelativeNegative(t *testing.T) {
+	t.Parallel()
+
+	ctrl := &fakeController{volRet: music.NewVolume(20)}
+
+	// A leading-dash argument must reach the command, not be parsed as a flag.
+	run(t, ctrl, "vol", "-20")
+
+	assert.Equal(t, []string{"AdjustVolume"}, ctrl.calls)
+	assert.Equal(t, -20, ctrl.adjustBy)
+}
+
 func TestShuffleCommand(t *testing.T) {
 	t.Parallel()
 

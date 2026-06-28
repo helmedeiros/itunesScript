@@ -25,10 +25,15 @@ if (out.running) {
   out.volume = Music.soundVolume();
   out.shuffle = Music.shuffleEnabled();
   out.repeat = Music.songRepeat();
-  if (out.state !== 'stopped') {
+  // The current track can be absent even when not strictly stopped (e.g. right
+  // after a stop), in which case reading it throws -1728. Treat that as "no
+  // track" rather than failing the whole status read.
+  try {
     out.elapsed = Music.playerPosition();
     const t = Music.currentTrack;
     out.track = { name: t.name(), artist: t.artist(), album: t.album(), duration: t.duration() };
+  } catch (e) {
+    out.track = null;
   }
 }
 JSON.stringify(out);
