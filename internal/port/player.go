@@ -1,0 +1,34 @@
+// Package port declares the interfaces (ports) the application depends on.
+// Adapters in internal/adapter implement these; the application never imports
+// an adapter directly.
+package port
+
+import (
+	"context"
+
+	"github.com/helmedeiros/itunesScript/internal/music"
+)
+
+// Player is the driven port for controlling the music engine (Music.app).
+// Implementations translate these calls into engine operations; the
+// application layer depends only on this interface.
+type Player interface {
+	// Status reads a snapshot of the current player state.
+	Status(ctx context.Context) (music.Status, error)
+
+	// Play resumes or starts playback.
+	Play(ctx context.Context) error
+	// Pause halts playback, keeping the current track loaded.
+	Pause(ctx context.Context) error
+	// TogglePlayPause flips between playing and paused.
+	TogglePlayPause(ctx context.Context) error
+	// Stop halts playback and unloads the current track.
+	Stop(ctx context.Context) error
+	// Next advances to the next track.
+	Next(ctx context.Context) error
+	// Previous returns to the previous track.
+	Previous(ctx context.Context) error
+
+	// SetVolume sets the sound volume.
+	SetVolume(ctx context.Context, v music.Volume) error
+}
