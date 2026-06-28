@@ -3,6 +3,8 @@ package cli
 import (
 	"context"
 	"fmt"
+	"io"
+	"os"
 
 	"github.com/spf13/cobra"
 
@@ -13,15 +15,18 @@ import (
 // NewRootCmd builds the command tree wired to a Controller. Output is written
 // to the command's configured streams so it can be captured in tests.
 func NewRootCmd(ctrl port.Controller) *cobra.Command {
+	var noColor bool
+
 	root := &cobra.Command{
 		Use:           "amp",
 		Short:         "Control Apple Music from the terminal",
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
+	root.PersistentFlags().BoolVar(&noColor, "no-color", false, "disable colored output")
 
 	root.AddCommand(
-		statusCmd(ctrl),
+		statusCmd(ctrl, &noColor),
 		transportCmd(ctrl, "play", "Resume or start playback", port.Controller.Play),
 		transportCmd(ctrl, "pause", "Pause playback", port.Controller.Pause),
 		transportCmd(ctrl, "toggle", "Toggle play/pause", port.Controller.Toggle),
@@ -76,7 +81,7 @@ func onOff(enabled bool) string {
 	return "off"
 }
 
-func statusCmd(ctrl port.Controller) *cobra.Command {
+func statusCmd(ctrl port.Controller, noColor *bool) *cobra.Command {
 	var asJSON bool
 
 	cmd := &cobra.Command{
@@ -88,17 +93,39 @@ func statusCmd(ctrl port.Controller) *cobra.Command {
 			if err != nil {
 				return err
 			}
+
+			out := cmd.OutOrStdout()
 			if asJSON {
-				fmt.Fprintln(cmd.OutOrStdout(), RenderStatusJSON(s))
-			} else {
-				fmt.Fprintln(cmd.OutOrStdout(), RenderStatus(s))
+				fmt.Fprintln(out, RenderStatusJSON(s))
+				return nil
 			}
+
+			theme := PlainTheme
+			if wantsColor(out, *noColor) {
+				theme = ColorTheme()
+			}
+			fmt.Fprintln(out, RenderStatus(s, theme))
 			return nil
 		},
 	}
 	cmd.Flags().BoolVar(&asJSON, "json", false, "output machine-readable JSON")
 
 	return cmd
+}
+
+// wantsColor reports whether colored output should be emitted: never when
+// disabled by --no-color or the NO_COLOR convention, and otherwise only when
+// the destination is a terminal.
+func wantsColor(w io.Writer, noColor bool) bool {
+	if noColor || os.Getenv("NO_COLOR") != "" {
+		return false
+	}
+	f, ok := w.(*os.File)
+	if !ok {
+		return false
+	}
+	info, err := f.Stat()
+	return err == nil && info.Mode()&os.ModeCharDevice != 0
 }
 
 // transportCmd builds a no-argument command that invokes a single Controller

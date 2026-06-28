@@ -2,6 +2,7 @@ package cli_test
 
 import (
 	"encoding/json"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -32,7 +33,7 @@ func playingStatus() music.Status {
 func TestRenderStatusHuman(t *testing.T) {
 	t.Parallel()
 
-	got := cli.RenderStatus(playingStatus())
+	got := cli.RenderStatus(playingStatus(), cli.PlainTheme)
 
 	assert.Contains(t, got, "playing  Utsu-P — Gorgon") // state label + aligned track
 	assert.Contains(t, got, "album    Unknown Album")
@@ -49,10 +50,10 @@ func TestRenderStatusHumanPausedMatchesPlaying(t *testing.T) {
 
 	// Pausing changes only the state word, not which fields are shown.
 	base := playingStatus()
-	playing := cli.RenderStatus(base)
+	playing := cli.RenderStatus(base, cli.PlainTheme)
 
 	base.State = music.Paused
-	paused := cli.RenderStatus(base)
+	paused := cli.RenderStatus(base, cli.PlainTheme)
 
 	playingHead, playingRest, _ := strings.Cut(playing, "\n")
 	pausedHead, pausedRest, _ := strings.Cut(paused, "\n")
@@ -73,7 +74,7 @@ func TestRenderStatusUnknownDuration(t *testing.T) {
 		Track:   music.Track{Name: "Live Stream"}, // no duration
 	}
 
-	got := cli.RenderStatus(s)
+	got := cli.RenderStatus(s, cli.PlainTheme)
 
 	assert.Contains(t, got, "01:40 / --:--", "unknown duration shows a placeholder")
 	assert.NotContains(t, got, "━", "no progress bar without a known duration")
@@ -82,7 +83,7 @@ func TestRenderStatusUnknownDuration(t *testing.T) {
 func TestRenderStatusHumanStopped(t *testing.T) {
 	t.Parallel()
 
-	got := cli.RenderStatus(music.Status{State: music.Stopped, Volume: music.NewVolume(50)})
+	got := cli.RenderStatus(music.Status{State: music.Stopped, Volume: music.NewVolume(50)}, cli.PlainTheme)
 
 	assert.Contains(t, got, "stopped")
 	assert.Contains(t, got, "volume   50%")
@@ -110,6 +111,33 @@ func TestRenderStatusJSON(t *testing.T) {
 	assert.Equal(t, "Gorgon", track["name"])
 	assert.Equal(t, "Utsu-P", track["artist"])
 	assert.InDelta(t, 255.0, track["duration_seconds"], 0.001)
+}
+
+var ansiPattern = regexp.MustCompile("\x1b\\[[0-9;]*m")
+
+func TestColorThemeAddsOnlyEscapeCodes(t *testing.T) {
+	t.Parallel()
+
+	s := playingStatus()
+
+	colored := cli.RenderStatus(s, cli.ColorTheme())
+	plain := cli.RenderStatus(s, cli.PlainTheme)
+
+	assert.Contains(t, colored, "\x1b[", "color theme must emit ANSI codes")
+	assert.Equal(t, plain, ansiPattern.ReplaceAllString(colored, ""),
+		"stripping color codes must reproduce the plain layout exactly (alignment preserved)")
+}
+
+func TestColorThemeStateColors(t *testing.T) {
+	t.Parallel()
+
+	playing := cli.RenderStatus(music.Status{State: music.Playing, Track: music.Track{Name: "x"}}, cli.ColorTheme())
+	paused := cli.RenderStatus(music.Status{State: music.Paused, Track: music.Track{Name: "x"}}, cli.ColorTheme())
+	stopped := cli.RenderStatus(music.Status{State: music.Stopped}, cli.ColorTheme())
+
+	assert.Contains(t, playing, "\x1b[32m", "playing is green")
+	assert.Contains(t, paused, "\x1b[33m", "paused is yellow")
+	assert.Contains(t, stopped, "\x1b[90m", "stopped is grey")
 }
 
 func TestProgressBar(t *testing.T) {

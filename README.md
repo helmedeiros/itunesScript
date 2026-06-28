@@ -51,6 +51,12 @@ amp repeat off | one | all
 
 Run `amp --help` for the full command list.
 
+`amp status` colorizes its output when writing to a terminal (the state word is
+colored, labels are dimmed). Color is disabled automatically when the output is
+piped or redirected, and can be turned off explicitly with `--no-color` or the
+`NO_COLOR` environment variable. To keep color under `watch`, use
+`watch --color -n1 amp status`.
+
 ## Shell completion
 
 `amp` generates completion scripts for bash, zsh, fish, and PowerShell. The zsh
