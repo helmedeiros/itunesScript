@@ -15,31 +15,63 @@ import (
 // progressBarWidth is how many cells the status progress bar spans.
 const progressBarWidth = 30
 
-// RenderStatus formats a status snapshot for humans, one line per fact.
-func RenderStatus(s music.Status) string {
-	var b strings.Builder
+// labelWidth aligns the value column; the longest label is "shuffle" (7).
+const labelWidth = 7
 
-	fmt.Fprintf(&b, "[%s]", s.State)
+type statusRow struct{ label, value string }
+
+// RenderStatus formats a status snapshot for humans as aligned label/value
+// rows. Playing and paused show the same fields (only the state word differs);
+// stopped/no-track collapses to the state and volume.
+func RenderStatus(s music.Status) string {
+	var rows []statusRow
+
 	if s.HasTrack() {
-		fmt.Fprintf(&b, " %s - %s", s.Track.Artist, s.Track.Name)
+		rows = append(rows, statusRow{s.State.String(), artistTitle(s.Track)})
 		if s.Track.Album != "" {
-			fmt.Fprintf(&b, " (%s)", s.Track.Album)
+			rows = append(rows, statusRow{"album", s.Track.Album})
 		}
-		fmt.Fprintf(&b, "\n%s %s %s",
-			FormatClock(s.Elapsed),
-			ProgressBar(s.Progress(), progressBarWidth),
-			FormatClock(s.Track.Duration),
+		rows = append(rows,
+			statusRow{"time", timeLine(s)},
+			statusRow{"volume", fmt.Sprintf("%d%%", s.Volume.Int())},
+			statusRow{"shuffle", onOff(s.Shuffle)},
+			statusRow{"repeat", s.Repeat.String()},
+		)
+	} else {
+		rows = append(rows,
+			statusRow{s.State.String(), ""},
+			statusRow{"volume", fmt.Sprintf("%d%%", s.Volume.Int())},
 		)
 	}
-	fmt.Fprintf(&b, "\nvol %d%%", s.Volume.Int())
-	if s.Shuffle {
-		b.WriteString("  shuffle")
-	}
-	if s.Repeat != music.RepeatOff {
-		fmt.Fprintf(&b, "  repeat %s", s.Repeat)
-	}
 
-	return b.String()
+	lines := make([]string, len(rows))
+	for i, r := range rows {
+		lines[i] = strings.TrimRight(fmt.Sprintf("%-*s  %s", labelWidth, r.label, r.value), " ")
+	}
+	return strings.Join(lines, "\n")
+}
+
+// artistTitle joins artist and title, or returns the title alone when the
+// artist is unknown.
+func artistTitle(t music.Track) string {
+	if t.Artist == "" {
+		return t.Name
+	}
+	return t.Artist + " — " + t.Name
+}
+
+// timeLine renders "elapsed / duration  <bar>  NN%". When the duration is
+// unknown it shows a placeholder and omits the bar and percentage.
+func timeLine(s music.Status) string {
+	if s.Track.Duration <= 0 {
+		return FormatClock(s.Elapsed) + " / --:--"
+	}
+	return fmt.Sprintf("%s / %s  %s  %d%%",
+		FormatClock(s.Elapsed),
+		FormatClock(s.Track.Duration),
+		ProgressBar(s.Progress(), progressBarWidth),
+		int(math.Round(s.Progress()*100)),
+	)
 }
 
 // statusJSON is the stable machine-readable shape of a status snapshot.
@@ -97,5 +129,5 @@ func ProgressBar(fraction float64, width int) string {
 // FormatClock renders a duration as m:ss (minutes are not zero-padded).
 func FormatClock(d time.Duration) string {
 	total := int(d.Round(time.Second).Seconds())
-	return fmt.Sprintf("%d:%02d", total/60, total%60)
+	return fmt.Sprintf("%02d:%02d", total/60, total%60)
 }

@@ -103,8 +103,7 @@ func TestStatusCommandHuman(t *testing.T) {
 
 	out := run(t, ctrl, "status")
 
-	assert.Contains(t, out, "[playing]")
-	assert.Contains(t, out, "Utsu-P - Gorgon")
+	assert.Contains(t, out, "playing  Utsu-P — Gorgon")
 	assert.Equal(t, []string{"Status"}, ctrl.calls)
 }
 
