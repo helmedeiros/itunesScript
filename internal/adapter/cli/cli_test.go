@@ -1,0 +1,264 @@
+package cli_test
+
+import (
+	"bytes"
+	"context"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/helmedeiros/itunesScript/internal/adapter/cli"
+	"github.com/helmedeiros/itunesScript/internal/music"
+)
+
+// fakeController records calls and returns canned data.
+type fakeController struct {
+	status     music.Status
+	calls      []string
+	setLevel   int
+	adjustBy   int
+	volRet     music.Volume
+	shuffleSet bool
+	shuffleRet bool
+	repeatSet  music.RepeatMode
+}
+
+func (f *fakeController) Status(context.Context) (music.Status, error) {
+	f.calls = append(f.calls, "Status")
+	return f.status, nil
+}
+func (f *fakeController) Play(context.Context) error  { f.calls = append(f.calls, "Play"); return nil }
+func (f *fakeController) Pause(context.Context) error { f.calls = append(f.calls, "Pause"); return nil }
+func (f *fakeController) Toggle(context.Context) error {
+	f.calls = append(f.calls, "Toggle")
+	return nil
+}
+func (f *fakeController) Stop(context.Context) error { f.calls = append(f.calls, "Stop"); return nil }
+func (f *fakeController) Next(context.Context) error { f.calls = append(f.calls, "Next"); return nil }
+func (f *fakeController) Previous(context.Context) error {
+	f.calls = append(f.calls, "Previous")
+	return nil
+}
+
+func (f *fakeController) SetVolume(_ context.Context, level int) (music.Volume, error) {
+	f.calls = append(f.calls, "SetVolume")
+	f.setLevel = level
+	return f.volRet, nil
+}
+
+func (f *fakeController) AdjustVolume(_ context.Context, delta int) (music.Volume, error) {
+	f.calls = append(f.calls, "AdjustVolume")
+	f.adjustBy = delta
+	return f.volRet, nil
+}
+
+func (f *fakeController) SetShuffle(_ context.Context, enabled bool) error {
+	f.calls = append(f.calls, "SetShuffle")
+	f.shuffleSet = enabled
+	return nil
+}
+
+func (f *fakeController) ToggleShuffle(context.Context) (bool, error) {
+	f.calls = append(f.calls, "ToggleShuffle")
+	return f.shuffleRet, nil
+}
+
+func (f *fakeController) SetRepeat(_ context.Context, mode music.RepeatMode) error {
+	f.calls = append(f.calls, "SetRepeat")
+	f.repeatSet = mode
+	return nil
+}
+
+func (f *fakeController) Mute(context.Context) error {
+	f.calls = append(f.calls, "Mute")
+	return nil
+}
+
+func (f *fakeController) Unmute(context.Context) (music.Volume, error) {
+	f.calls = append(f.calls, "Unmute")
+	return f.volRet, nil
+}
+
+func run(t *testing.T, ctrl *fakeController, args ...string) string {
+	t.Helper()
+
+	var out bytes.Buffer
+	cmd := cli.NewRootCmd(ctrl)
+	cmd.SetOut(&out)
+	cmd.SetErr(&out)
+	cmd.SetArgs(args)
+
+	require.NoError(t, cmd.Execute())
+	return out.String()
+}
+
+func TestStatusCommandHuman(t *testing.T) {
+	t.Parallel()
+
+	ctrl := &fakeController{status: music.Status{
+		State: music.Playing,
+		Track: music.Track{Name: "Gorgon", Artist: "Utsu-P"},
+	}}
+
+	out := run(t, ctrl, "status")
+
+	assert.Contains(t, out, "[playing]")
+	assert.Contains(t, out, "Utsu-P - Gorgon")
+	assert.Equal(t, []string{"Status"}, ctrl.calls)
+}
+
+func TestStatusCommandJSON(t *testing.T) {
+	t.Parallel()
+
+	ctrl := &fakeController{status: music.Status{State: music.Paused, Volume: music.NewVolume(33)}}
+
+	out := run(t, ctrl, "status", "--json")
+
+	assert.Contains(t, out, `"state":"paused"`)
+	assert.Contains(t, out, `"volume":33`)
+}
+
+func TestTransportCommands(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		arg  string
+		want string
+	}{
+		{arg: "play", want: "Play"},
+		{arg: "pause", want: "Pause"},
+		{arg: "toggle", want: "Toggle"},
+		{arg: "stop", want: "Stop"},
+		{arg: "next", want: "Next"},
+		{arg: "prev", want: "Previous"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.arg, func(t *testing.T) {
+			t.Parallel()
+
+			ctrl := &fakeController{}
+			run(t, ctrl, tt.arg)
+			assert.Equal(t, []string{tt.want}, ctrl.calls)
+		})
+	}
+}
+
+func TestVolCommandAbsolute(t *testing.T) {
+	t.Parallel()
+
+	ctrl := &fakeController{volRet: music.NewVolume(42)}
+
+	out := run(t, ctrl, "vol", "42")
+
+	assert.Equal(t, []string{"SetVolume"}, ctrl.calls)
+	assert.Equal(t, 42, ctrl.setLevel)
+	assert.Contains(t, out, "42")
+}
+
+func TestVolCommandRelative(t *testing.T) {
+	t.Parallel()
+
+	ctrl := &fakeController{volRet: music.NewVolume(70)}
+
+	run(t, ctrl, "vol", "+10")
+
+	assert.Equal(t, []string{"AdjustVolume"}, ctrl.calls)
+	assert.Equal(t, 10, ctrl.adjustBy)
+}
+
+func TestVolCommandRelativeNegative(t *testing.T) {
+	t.Parallel()
+
+	ctrl := &fakeController{volRet: music.NewVolume(20)}
+
+	// A leading-dash argument must reach the command, not be parsed as a flag.
+	run(t, ctrl, "vol", "-20")
+
+	assert.Equal(t, []string{"AdjustVolume"}, ctrl.calls)
+	assert.Equal(t, -20, ctrl.adjustBy)
+}
+
+func TestShuffleCommand(t *testing.T) {
+	t.Parallel()
+
+	t.Run("on", func(t *testing.T) {
+		t.Parallel()
+		ctrl := &fakeController{}
+		run(t, ctrl, "shuffle", "on")
+		assert.Equal(t, []string{"SetShuffle"}, ctrl.calls)
+		assert.True(t, ctrl.shuffleSet)
+	})
+
+	t.Run("off", func(t *testing.T) {
+		t.Parallel()
+		ctrl := &fakeController{}
+		run(t, ctrl, "shuffle", "off")
+		assert.Equal(t, []string{"SetShuffle"}, ctrl.calls)
+		assert.False(t, ctrl.shuffleSet)
+	})
+
+	t.Run("toggle is the default with no arg", func(t *testing.T) {
+		t.Parallel()
+		ctrl := &fakeController{shuffleRet: true}
+		out := run(t, ctrl, "shuffle")
+		assert.Equal(t, []string{"ToggleShuffle"}, ctrl.calls)
+		assert.Contains(t, out, "on")
+	})
+}
+
+func TestRepeatCommand(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		arg  string
+		want music.RepeatMode
+	}{
+		{arg: "off", want: music.RepeatOff},
+		{arg: "one", want: music.RepeatOne},
+		{arg: "all", want: music.RepeatAll},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.arg, func(t *testing.T) {
+			t.Parallel()
+			ctrl := &fakeController{}
+			run(t, ctrl, "repeat", tt.arg)
+			assert.Equal(t, []string{"SetRepeat"}, ctrl.calls)
+			assert.Equal(t, tt.want, ctrl.repeatSet)
+		})
+	}
+}
+
+func TestMuteCommand(t *testing.T) {
+	t.Parallel()
+
+	ctrl := &fakeController{}
+	out := run(t, ctrl, "mute")
+
+	assert.Equal(t, []string{"Mute"}, ctrl.calls)
+	assert.Contains(t, out, "muted")
+}
+
+func TestUnmuteCommand(t *testing.T) {
+	t.Parallel()
+
+	ctrl := &fakeController{volRet: music.NewVolume(80)}
+	out := run(t, ctrl, "unmute")
+
+	assert.Equal(t, []string{"Unmute"}, ctrl.calls)
+	assert.Contains(t, out, "vol 80%")
+}
+
+func TestRepeatCommandRejectsUnknownMode(t *testing.T) {
+	t.Parallel()
+
+	var out bytes.Buffer
+	cmd := cli.NewRootCmd(&fakeController{})
+	cmd.SetOut(&out)
+	cmd.SetErr(&out)
+	cmd.SetArgs([]string{"repeat", "sometimes"})
+
+	require.Error(t, cmd.Execute())
+}
