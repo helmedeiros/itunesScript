@@ -1,4 +1,4 @@
-module github.com/helmedeiros/itunesScript
+module github.com/helmedeiros/amp
 
 go 1.26.4
 

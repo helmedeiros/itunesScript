@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/helmedeiros/itunesScript/internal/adapter/cli"
-	"github.com/helmedeiros/itunesScript/internal/music"
+	"github.com/helmedeiros/amp/internal/adapter/cli"
+	"github.com/helmedeiros/amp/internal/music"
 )
 
 // fakeController records calls and returns canned data.

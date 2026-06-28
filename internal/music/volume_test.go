@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/helmedeiros/itunesScript/internal/music"
+	"github.com/helmedeiros/amp/internal/music"
 )
 
 func TestNewVolumeClampsToRange(t *testing.T) {
