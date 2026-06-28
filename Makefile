@@ -43,6 +43,10 @@ integration: ## Run osascript integration tests (requires macOS + Music.app)
 build: ## Build all binaries into ./bin
 	$(GO) build -o bin/ ./cmd/...
 
+.PHONY: install
+install: ## Install the am binary into $GOPATH/bin
+	$(GO) install ./cmd/am
+
 .PHONY: tidy
 tidy: ## Tidy module dependencies
 	$(GO) mod tidy
