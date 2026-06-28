@@ -1,0 +1,84 @@
+// Package applescript is the driven adapter that controls Music.app through
+// osascript. It is the only package that knows how the engine is operated;
+// everything above it depends on the port, not on this code.
+package applescript
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/helmedeiros/itunesScript/internal/music"
+	"github.com/helmedeiros/itunesScript/internal/port"
+)
+
+// Player controls Music.app and implements port.Player.
+type Player struct {
+	run runner
+}
+
+// New returns a Player backed by the real osascript binary.
+func New() *Player {
+	return newPlayer(execRunner{})
+}
+
+// newPlayer builds a Player with an explicit runner (used by tests).
+func newPlayer(r runner) *Player {
+	return &Player{run: r}
+}
+
+var _ port.Player = (*Player)(nil)
+
+// tellMusic wraps an action in the AppleScript command that targets Music.app.
+func tellMusic(action string) string {
+	return `tell application "Music" to ` + action
+}
+
+// Status reads the full player snapshot in a single osascript call.
+func (p *Player) Status(ctx context.Context) (music.Status, error) {
+	out, err := p.run.Run(ctx, javaScript, statusScript)
+	if err != nil {
+		return music.Status{}, err
+	}
+	return parseStatus(out)
+}
+
+// Play resumes or starts playback.
+func (p *Player) Play(ctx context.Context) error {
+	return p.tell(ctx, "play")
+}
+
+// Pause halts playback.
+func (p *Player) Pause(ctx context.Context) error {
+	return p.tell(ctx, "pause")
+}
+
+// TogglePlayPause flips between playing and paused.
+func (p *Player) TogglePlayPause(ctx context.Context) error {
+	return p.tell(ctx, "playpause")
+}
+
+// Stop halts playback and unloads the current track.
+func (p *Player) Stop(ctx context.Context) error {
+	return p.tell(ctx, "stop")
+}
+
+// Next advances to the next track.
+func (p *Player) Next(ctx context.Context) error {
+	return p.tell(ctx, "next track")
+}
+
+// Previous returns to the previous track.
+func (p *Player) Previous(ctx context.Context) error {
+	return p.tell(ctx, "previous track")
+}
+
+// SetVolume sets the sound volume.
+func (p *Player) SetVolume(ctx context.Context, v music.Volume) error {
+	return p.tell(ctx, fmt.Sprintf("set sound volume to %d", v.Int()))
+}
+
+// tell runs an AppleScript action against Music.app, discarding its output.
+func (p *Player) tell(ctx context.Context, action string) error {
+	_, err := p.run.Run(ctx, appleScript, tellMusic(action))
+	return err
+}

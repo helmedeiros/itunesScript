@@ -1,0 +1,94 @@
+package applescript
+
+import (
+	"encoding/json"
+	"errors"
+	"fmt"
+	"time"
+
+	"github.com/helmedeiros/itunesScript/internal/music"
+)
+
+// ErrNotRunning is returned when Music.app is not running and therefore has no
+// status to report.
+var ErrNotRunning = errors.New("music: application is not running")
+
+// statusScript is a single JavaScript-for-Automation program that reads the
+// whole player snapshot in one osascript invocation and prints it as JSON.
+// Reading everything at once avoids the per-field osascript latency the legacy
+// shell scripts paid (see ADR-0004).
+const statusScript = `
+const Music = Application('Music');
+const out = { running: Music.running() };
+if (out.running) {
+  out.state = Music.playerState();
+  out.volume = Music.soundVolume();
+  out.shuffle = Music.shuffleEnabled();
+  out.repeat = Music.songRepeat();
+  if (out.state !== 'stopped') {
+    out.elapsed = Music.playerPosition();
+    const t = Music.currentTrack;
+    out.track = { name: t.name(), artist: t.artist(), album: t.album(), duration: t.duration() };
+  }
+}
+JSON.stringify(out);
+`
+
+// statusDTO mirrors the JSON emitted by statusScript.
+type statusDTO struct {
+	Running bool    `json:"running"`
+	State   string  `json:"state"`
+	Volume  int     `json:"volume"`
+	Shuffle bool    `json:"shuffle"`
+	Repeat  string  `json:"repeat"`
+	Elapsed float64 `json:"elapsed"`
+	Track   struct {
+		Name     string  `json:"name"`
+		Artist   string  `json:"artist"`
+		Album    string  `json:"album"`
+		Duration float64 `json:"duration"`
+	} `json:"track"`
+}
+
+// parseStatus maps the JSON status payload onto the domain Status. It returns
+// ErrNotRunning when Music.app is not running.
+func parseStatus(raw []byte) (music.Status, error) {
+	var dto statusDTO
+	if err := json.Unmarshal(raw, &dto); err != nil {
+		return music.Status{}, fmt.Errorf("decode status: %w", err)
+	}
+
+	if !dto.Running {
+		return music.Status{}, ErrNotRunning
+	}
+
+	state, err := music.ParsePlayerState(dto.State)
+	if err != nil {
+		return music.Status{}, err
+	}
+
+	repeat, err := music.ParseRepeatMode(dto.Repeat)
+	if err != nil {
+		return music.Status{}, err
+	}
+
+	return music.Status{
+		State:   state,
+		Volume:  music.NewVolume(dto.Volume),
+		Shuffle: dto.Shuffle,
+		Repeat:  repeat,
+		Elapsed: seconds(dto.Elapsed),
+		Track: music.Track{
+			Name:     dto.Track.Name,
+			Artist:   dto.Track.Artist,
+			Album:    dto.Track.Album,
+			Duration: seconds(dto.Track.Duration),
+		},
+	}, nil
+}
+
+// seconds converts a floating-point seconds value (as Music.app reports
+// positions and durations) into a time.Duration.
+func seconds(s float64) time.Duration {
+	return time.Duration(s * float64(time.Second))
+}
