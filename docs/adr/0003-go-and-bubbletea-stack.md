@@ -7,8 +7,8 @@
 
 The project was a collection of POSIX-ish shell scripts. To build a testable,
 maintainable application with a rich terminal UI we need a real language and a
-TUI toolkit. The reference experience is a modern MPD TUI client (tabs, live
-header, album art, vim-style keys).
+TUI toolkit. The reference experience is a modern, full-screen terminal music
+player (tabs, live header, album art, vim-style keys).
 
 ## Decision
 
