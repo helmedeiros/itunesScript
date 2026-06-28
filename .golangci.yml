@@ -11,6 +11,12 @@ linters:
     - unconvert
     - unparam
   settings:
+    errcheck:
+      exclude-functions:
+        - (*bytes.Buffer).WriteString
+        - fmt.Fprint
+        - fmt.Fprintf
+        - fmt.Fprintln
     revive:
       rules:
         - name: exported

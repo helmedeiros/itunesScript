@@ -21,6 +21,8 @@ func NewService(player port.Player) *Service {
 	return &Service{player: player}
 }
 
+var _ port.Controller = (*Service)(nil)
+
 // Status reads the current player snapshot.
 func (s *Service) Status(ctx context.Context) (music.Status, error) {
 	return s.player.Status(ctx)
