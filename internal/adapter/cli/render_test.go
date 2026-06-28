@@ -36,7 +36,9 @@ func TestRenderStatusHuman(t *testing.T) {
 	assert.Contains(t, got, "[playing]")
 	assert.Contains(t, got, "Utsu-P - Gorgon")
 	assert.Contains(t, got, "Unknown Album")
-	assert.Contains(t, got, "1:57/4:15")
+	assert.Contains(t, got, "1:57") // elapsed
+	assert.Contains(t, got, "4:15") // duration
+	assert.Contains(t, got, "━")    // progress bar is rendered
 	assert.Contains(t, got, "vol 60%")
 }
 
@@ -68,6 +70,37 @@ func TestRenderStatusJSON(t *testing.T) {
 	assert.Equal(t, "Gorgon", track["name"])
 	assert.Equal(t, "Utsu-P", track["artist"])
 	assert.InDelta(t, 255.0, track["duration_seconds"], 0.001)
+}
+
+func TestProgressBar(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		fraction float64
+		width    int
+		want     string
+	}{
+		{name: "empty", fraction: 0, width: 5, want: "─────"},
+		{name: "full", fraction: 1, width: 5, want: "━━━━━"},
+		{name: "half", fraction: 0.5, width: 10, want: "━━━━━─────"},
+		{name: "clamps below zero", fraction: -1, width: 4, want: "────"},
+		{name: "clamps above one", fraction: 2, width: 4, want: "━━━━"},
+		{name: "zero width is empty", fraction: 0.5, width: 0, want: ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			assert.Equal(t, tt.want, cli.ProgressBar(tt.fraction, tt.width))
+		})
+	}
+}
+
+func TestProgressBarAlwaysRendersWidthCells(t *testing.T) {
+	t.Parallel()
+
+	assert.Equal(t, 20, len([]rune(cli.ProgressBar(0.37, 20))))
 }
 
 func TestFormatClock(t *testing.T) {

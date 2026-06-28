@@ -5,11 +5,15 @@ package cli
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"strings"
 	"time"
 
 	"github.com/helmedeiros/amp/internal/music"
 )
+
+// progressBarWidth is how many cells the status progress bar spans.
+const progressBarWidth = 30
 
 // RenderStatus formats a status snapshot for humans, one line per fact.
 func RenderStatus(s music.Status) string {
@@ -21,7 +25,11 @@ func RenderStatus(s music.Status) string {
 		if s.Track.Album != "" {
 			fmt.Fprintf(&b, " (%s)", s.Track.Album)
 		}
-		fmt.Fprintf(&b, "\n%s/%s", FormatClock(s.Elapsed), FormatClock(s.Track.Duration))
+		fmt.Fprintf(&b, "\n%s %s %s",
+			FormatClock(s.Elapsed),
+			ProgressBar(s.Progress(), progressBarWidth),
+			FormatClock(s.Track.Duration),
+		)
 	}
 	fmt.Fprintf(&b, "\nvol %d%%", s.Volume.Int())
 	if s.Shuffle {
@@ -71,6 +79,19 @@ func RenderStatusJSON(s music.Status) string {
 
 	out, _ := json.Marshal(payload)
 	return string(out)
+}
+
+// ProgressBar renders a fixed-width bar for a fraction in [0, 1]: filled cells
+// for the elapsed portion, empty cells for the rest. Out-of-range fractions are
+// clamped, and the result is always exactly width cells wide.
+func ProgressBar(fraction float64, width int) string {
+	if width <= 0 {
+		return ""
+	}
+	fraction = math.Max(0, math.Min(1, fraction))
+
+	filled := int(math.Round(fraction * float64(width)))
+	return strings.Repeat("━", filled) + strings.Repeat("─", width-filled)
 }
 
 // FormatClock renders a duration as m:ss (minutes are not zero-padded).
