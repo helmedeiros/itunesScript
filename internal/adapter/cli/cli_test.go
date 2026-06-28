@@ -70,6 +70,16 @@ func (f *fakeController) SetRepeat(_ context.Context, mode music.RepeatMode) err
 	return nil
 }
 
+func (f *fakeController) Mute(context.Context) error {
+	f.calls = append(f.calls, "Mute")
+	return nil
+}
+
+func (f *fakeController) Unmute(context.Context) (music.Volume, error) {
+	f.calls = append(f.calls, "Unmute")
+	return f.volRet, nil
+}
+
 func run(t *testing.T, ctrl *fakeController, args ...string) string {
 	t.Helper()
 
@@ -207,6 +217,26 @@ func TestRepeatCommand(t *testing.T) {
 			assert.Equal(t, tt.want, ctrl.repeatSet)
 		})
 	}
+}
+
+func TestMuteCommand(t *testing.T) {
+	t.Parallel()
+
+	ctrl := &fakeController{}
+	out := run(t, ctrl, "mute")
+
+	assert.Equal(t, []string{"Mute"}, ctrl.calls)
+	assert.Contains(t, out, "muted")
+}
+
+func TestUnmuteCommand(t *testing.T) {
+	t.Parallel()
+
+	ctrl := &fakeController{volRet: music.NewVolume(80)}
+	out := run(t, ctrl, "unmute")
+
+	assert.Equal(t, []string{"Unmute"}, ctrl.calls)
+	assert.Contains(t, out, "vol 80%")
 }
 
 func TestRepeatCommandRejectsUnknownMode(t *testing.T) {

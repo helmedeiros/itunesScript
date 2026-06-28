@@ -29,4 +29,9 @@ type Controller interface {
 	ToggleShuffle(ctx context.Context) (bool, error)
 	// SetRepeat sets the repeat mode.
 	SetRepeat(ctx context.Context, mode music.RepeatMode) error
+
+	// Mute silences playback, remembering the current level.
+	Mute(ctx context.Context) error
+	// Unmute restores the remembered level and returns the applied volume.
+	Unmute(ctx context.Context) (music.Volume, error)
 }

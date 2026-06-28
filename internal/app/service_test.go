@@ -64,12 +64,27 @@ func (f *fakePlayer) SetRepeat(_ context.Context, mode music.RepeatMode) error {
 	return nil
 }
 
+// memStore is an in-memory VolumeStore for tests.
+type memStore struct {
+	level int
+	ok    bool
+}
+
+func (m *memStore) Save(level int) error {
+	m.level, m.ok = level, true
+	return nil
+}
+
+func (m *memStore) Load() (int, bool, error) {
+	return m.level, m.ok, nil
+}
+
 func TestServiceStatusPassesThrough(t *testing.T) {
 	t.Parallel()
 
 	want := music.Status{State: music.Playing, Track: music.Track{Name: "Gorgon"}}
 	fake := &fakePlayer{status: want}
-	svc := app.NewService(fake)
+	svc := app.NewService(fake, &memStore{})
 
 	got, err := svc.Status(context.Background())
 
@@ -81,7 +96,7 @@ func TestServiceTransportDelegates(t *testing.T) {
 	t.Parallel()
 
 	fake := &fakePlayer{}
-	svc := app.NewService(fake)
+	svc := app.NewService(fake, &memStore{})
 	ctx := context.Background()
 
 	require.NoError(t, svc.Play(ctx))
@@ -101,7 +116,7 @@ func TestServiceSetVolumeClamps(t *testing.T) {
 	t.Parallel()
 
 	fake := &fakePlayer{}
-	svc := app.NewService(fake)
+	svc := app.NewService(fake, &memStore{})
 
 	got, err := svc.SetVolume(context.Background(), 250)
 
@@ -115,7 +130,7 @@ func TestServiceAdjustVolumeReadsThenSets(t *testing.T) {
 	t.Parallel()
 
 	fake := &fakePlayer{status: music.Status{Volume: music.NewVolume(95)}}
-	svc := app.NewService(fake)
+	svc := app.NewService(fake, &memStore{})
 
 	got, err := svc.AdjustVolume(context.Background(), 10)
 
@@ -131,7 +146,7 @@ func TestServiceAdjustVolumeSurfacesStatusError(t *testing.T) {
 
 	boom := errors.New("osascript failed")
 	fake := &fakePlayer{statusErr: boom}
-	svc := app.NewService(fake)
+	svc := app.NewService(fake, &memStore{})
 
 	_, err := svc.AdjustVolume(context.Background(), 10)
 
@@ -143,7 +158,7 @@ func TestServiceSetShuffle(t *testing.T) {
 	t.Parallel()
 
 	fake := &fakePlayer{}
-	svc := app.NewService(fake)
+	svc := app.NewService(fake, &memStore{})
 
 	require.NoError(t, svc.SetShuffle(context.Background(), true))
 
@@ -155,7 +170,7 @@ func TestServiceToggleShuffleFlipsCurrent(t *testing.T) {
 	t.Parallel()
 
 	fake := &fakePlayer{status: music.Status{Shuffle: true}}
-	svc := app.NewService(fake)
+	svc := app.NewService(fake, &memStore{})
 
 	now, err := svc.ToggleShuffle(context.Background())
 
@@ -171,7 +186,7 @@ func TestServiceToggleShuffleSurfacesReadError(t *testing.T) {
 
 	boom := errors.New("read failed")
 	fake := &fakePlayer{statusErr: boom}
-	svc := app.NewService(fake)
+	svc := app.NewService(fake, &memStore{})
 
 	_, err := svc.ToggleShuffle(context.Background())
 
@@ -183,10 +198,65 @@ func TestServiceSetRepeat(t *testing.T) {
 	t.Parallel()
 
 	fake := &fakePlayer{}
-	svc := app.NewService(fake)
+	svc := app.NewService(fake, &memStore{})
 
 	require.NoError(t, svc.SetRepeat(context.Background(), music.RepeatAll))
 
 	require.NotNil(t, fake.repeatSet)
 	assert.Equal(t, music.RepeatAll, *fake.repeatSet)
+}
+
+func TestServiceMuteSavesLevelAndZeroes(t *testing.T) {
+	t.Parallel()
+
+	fake := &fakePlayer{status: music.Status{Volume: music.NewVolume(80)}}
+	store := &memStore{}
+	svc := app.NewService(fake, store)
+
+	require.NoError(t, svc.Mute(context.Background()))
+
+	assert.Equal(t, 80, store.level, "prior level remembered")
+	assert.True(t, store.ok)
+	require.NotNil(t, fake.volumeSet)
+	assert.Equal(t, 0, fake.volumeSet.Int())
+}
+
+func TestServiceMuteWhenAlreadySilentIsNoop(t *testing.T) {
+	t.Parallel()
+
+	fake := &fakePlayer{status: music.Status{Volume: music.NewVolume(0)}}
+	store := &memStore{}
+	svc := app.NewService(fake, store)
+
+	require.NoError(t, svc.Mute(context.Background()))
+
+	assert.False(t, store.ok, "must not overwrite remembered level when already muted")
+	assert.NotContains(t, fake.calls, "SetVolume")
+}
+
+func TestServiceUnmuteRestoresSavedLevel(t *testing.T) {
+	t.Parallel()
+
+	fake := &fakePlayer{}
+	store := &memStore{level: 80, ok: true}
+	svc := app.NewService(fake, store)
+
+	got, err := svc.Unmute(context.Background())
+
+	require.NoError(t, err)
+	assert.Equal(t, 80, got.Int())
+	require.NotNil(t, fake.volumeSet)
+	assert.Equal(t, 80, fake.volumeSet.Int())
+}
+
+func TestServiceUnmuteFallsBackToDefault(t *testing.T) {
+	t.Parallel()
+
+	fake := &fakePlayer{}
+	svc := app.NewService(fake, &memStore{}) // nothing stored
+
+	got, err := svc.Unmute(context.Background())
+
+	require.NoError(t, err)
+	assert.Equal(t, app.DefaultUnmuteVolume, got.Int())
 }

@@ -10,15 +10,19 @@ import (
 	"github.com/helmedeiros/itunesScript/internal/port"
 )
 
+// DefaultUnmuteVolume is the level unmute restores when no prior level is known.
+const DefaultUnmuteVolume = 50
+
 // Service is the application's entry point for controlling playback. It is the
 // single object the driving adapters (CLI, later the TUI) call into.
 type Service struct {
 	player port.Player
+	volume port.VolumeStore
 }
 
-// NewService wires the service to a Player port implementation.
-func NewService(player port.Player) *Service {
-	return &Service{player: player}
+// NewService wires the service to a Player and a VolumeStore.
+func NewService(player port.Player, volume port.VolumeStore) *Service {
+	return &Service{player: player, volume: volume}
 }
 
 var _ port.Controller = (*Service)(nil)
@@ -93,6 +97,44 @@ func (s *Service) AdjustVolume(ctx context.Context, delta int) (music.Volume, er
 	v := status.Volume.Adjust(delta)
 	if err := s.player.SetVolume(ctx, v); err != nil {
 		return 0, fmt.Errorf("set volume: %w", err)
+	}
+	return v, nil
+}
+
+// Mute remembers the current volume and sets it to zero. If the volume is
+// already zero it does nothing, so the remembered level survives a double mute.
+func (s *Service) Mute(ctx context.Context) error {
+	status, err := s.player.Status(ctx)
+	if err != nil {
+		return fmt.Errorf("read volume: %w", err)
+	}
+	if status.Volume.IsMuted() {
+		return nil
+	}
+
+	if err := s.volume.Save(status.Volume.Int()); err != nil {
+		return fmt.Errorf("remember volume: %w", err)
+	}
+	if err := s.player.SetVolume(ctx, music.NewVolume(0)); err != nil {
+		return fmt.Errorf("mute: %w", err)
+	}
+	return nil
+}
+
+// Unmute restores the remembered volume, falling back to DefaultUnmuteVolume
+// when no prior level is known, and returns the level applied.
+func (s *Service) Unmute(ctx context.Context) (music.Volume, error) {
+	level, ok, err := s.volume.Load()
+	if err != nil {
+		return 0, fmt.Errorf("recall volume: %w", err)
+	}
+	if !ok || level <= 0 {
+		level = DefaultUnmuteVolume
+	}
+
+	v := music.NewVolume(level)
+	if err := s.player.SetVolume(ctx, v); err != nil {
+		return 0, fmt.Errorf("unmute: %w", err)
 	}
 	return v, nil
 }

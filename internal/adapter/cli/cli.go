@@ -29,11 +29,44 @@ func NewRootCmd(ctrl port.Controller) *cobra.Command {
 		transportCmd(ctrl, "next", "Skip to the next track", port.Controller.Next),
 		transportCmd(ctrl, "prev", "Skip to the previous track", port.Controller.Previous),
 		volCmd(ctrl),
+		muteCmd(ctrl),
+		unmuteCmd(ctrl),
 		shuffleCmd(ctrl),
 		repeatCmd(ctrl),
 	)
 
 	return root
+}
+
+func muteCmd(ctrl port.Controller) *cobra.Command {
+	return &cobra.Command{
+		Use:   "mute",
+		Short: "Silence playback, remembering the current volume",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			if err := ctrl.Mute(cmd.Context()); err != nil {
+				return err
+			}
+			fmt.Fprintln(cmd.OutOrStdout(), "muted")
+			return nil
+		},
+	}
+}
+
+func unmuteCmd(ctrl port.Controller) *cobra.Command {
+	return &cobra.Command{
+		Use:   "unmute",
+		Short: "Restore the volume from before muting",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			v, err := ctrl.Unmute(cmd.Context())
+			if err != nil {
+				return err
+			}
+			fmt.Fprintf(cmd.OutOrStdout(), "vol %d%%\n", v.Int())
+			return nil
+		},
+	}
 }
 
 func onOff(enabled bool) string {
