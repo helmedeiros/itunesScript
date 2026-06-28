@@ -6,14 +6,14 @@ scripting your music without leaving the keyboard.
 
 `amp` treats **Music.app as the engine** and drives it through AppleScript, so
 there's no playback daemon to run and nothing to configure. The CLI binary is
-`am`.
+`amp`.
 
 ## Install
 
 Requires Go 1.26+ and macOS with Music.app.
 
 ```sh
-go install github.com/helmedeiros/amp/cmd/am@latest
+go install github.com/helmedeiros/amp/cmd/amp@latest
 ```
 
 Or build from a clone:
@@ -21,53 +21,53 @@ Or build from a clone:
 ```sh
 git clone https://github.com/helmedeiros/amp.git
 cd amp
-make build      # produces ./bin/am
+make build      # produces ./bin/amp
 ```
 
 ## Usage
 
 ```sh
-am status            # show what's playing
-am status --json     # machine-readable, for scripts
+amp status            # show what's playing
+amp status --json     # machine-readable, for scripts
 
-am play              # transport
-am pause
-am toggle            # play/pause
-am stop
-am next
-am prev
+amp play              # transport
+amp pause
+amp toggle            # play/pause
+amp stop
+amp next
+amp prev
 
-am vol 60            # set volume to 60%
-am vol +10           # raise by 10
-am vol -10           # lower by 10
-am vol up | down     # ±10
-am mute              # silence, remembering the level
-am unmute            # restore it
+amp vol 60            # set volume to 60%
+amp vol +10           # raise by 10
+amp vol -10           # lower by 10
+amp vol up | down     # ±10
+amp mute              # silence, remembering the level
+amp unmute            # restore it
 
-am shuffle           # toggle shuffle
-am shuffle on | off
-am repeat off | one | all
+amp shuffle           # toggle shuffle
+amp shuffle on | off
+amp repeat off | one | all
 ```
 
-Run `am --help` for the full command list.
+Run `amp --help` for the full command list.
 
 ## Shell completion
 
-`am` generates completion scripts for bash, zsh, fish, and PowerShell. The zsh
+`amp` generates completion scripts for bash, zsh, fish, and PowerShell. The zsh
 and bash scripts complete commands, flags, and arguments dynamically.
 
 ```sh
 # zsh — place on your fpath (a directory compinit reads), then restart your shell
-am completion zsh > "${fpath[1]}/_am"
+amp completion zsh > "${fpath[1]}/_amp"
 
 # bash
-am completion bash | sudo tee /etc/bash_completion.d/am >/dev/null
+amp completion bash | sudo tee /etc/bash_completion.d/amp >/dev/null
 
 # fish
-am completion fish > ~/.config/fish/completions/am.fish
+amp completion fish > ~/.config/fish/completions/amp.fish
 ```
 
-See `am completion --help` for per-shell details.
+See `amp completion --help` for per-shell details.
 
 ## Architecture
 
@@ -81,7 +81,7 @@ See `am completion --help` for per-shell details.
 - **`internal/adapter`** — the edges: `applescript` (the Music.app engine via
   `osascript`), `store` (file-backed volume state), and `cli` (the command
   tree).
-- **`cmd/am`** — wiring.
+- **`cmd/amp`** — wiring.
 
 Architectural decisions are recorded in [`docs/adr/`](docs/adr/). The design
 keeps `osascript` behind a single seam, so the logic is covered by a wide base
@@ -94,7 +94,7 @@ binary (`make integration`, requires Music.app).
 make ci            # format check, vet, lint, race-enabled tests
 make test          # tests only
 make integration   # osascript integration tests (needs Music.app)
-make build         # build ./bin/am
+make build         # build ./bin/amp
 ```
 
 ## License
