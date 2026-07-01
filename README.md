@@ -27,9 +27,10 @@ make build      # produces ./bin/amp
 ## Usage
 
 ```sh
-amp status            # show what's playing
-amp status --json     # machine-readable, for scripts
+amp status            # show what's playing (add --json for scripts)
+amp now               # the current track on one line
 
+amp open              # launch Apple Music
 amp play              # transport
 amp pause
 amp toggle            # play/pause
@@ -47,6 +48,13 @@ amp unmute            # restore it
 amp shuffle           # toggle shuffle
 amp shuffle on | off
 amp repeat off | one | all
+
+amp search daft punk        # search the library (--limit N, --json)
+amp playlists               # list your playlists (--json)
+amp library artists         # distinct artists (--json)
+amp library albums          # distinct albums (--json)
+
+amp --version
 ```
 
 Run `amp --help` for the full command list.
