@@ -26,6 +26,7 @@ type fakeController struct {
 	searchLimit  int
 	searchResult []music.Track
 	playlists    []music.Playlist
+	names        []string
 }
 
 func (f *fakeController) Status(context.Context) (music.Status, error) {
@@ -43,6 +44,16 @@ func (f *fakeController) Search(_ context.Context, query string, limit int) ([]m
 func (f *fakeController) Playlists(context.Context) ([]music.Playlist, error) {
 	f.calls = append(f.calls, "Playlists")
 	return f.playlists, nil
+}
+
+func (f *fakeController) Artists(context.Context) ([]string, error) {
+	f.calls = append(f.calls, "Artists")
+	return f.names, nil
+}
+
+func (f *fakeController) Albums(context.Context) ([]string, error) {
+	f.calls = append(f.calls, "Albums")
+	return f.names, nil
 }
 func (f *fakeController) Play(context.Context) error  { f.calls = append(f.calls, "Play"); return nil }
 func (f *fakeController) Pause(context.Context) error { f.calls = append(f.calls, "Pause"); return nil }
@@ -180,6 +191,29 @@ func TestPlaylistsCommandJSON(t *testing.T) {
 	out := run(t, ctrl, "playlists", "--json")
 
 	assert.Contains(t, out, `"name":"Chill"`)
+}
+
+func TestLibraryArtistsCommand(t *testing.T) {
+	t.Parallel()
+
+	ctrl := &fakeController{names: []string{"Daft Punk", "Utsu-P"}}
+
+	out := run(t, ctrl, "library", "artists")
+
+	assert.Equal(t, []string{"Artists"}, ctrl.calls)
+	assert.Contains(t, out, "Daft Punk")
+	assert.Contains(t, out, "Utsu-P")
+}
+
+func TestLibraryAlbumsCommandJSON(t *testing.T) {
+	t.Parallel()
+
+	ctrl := &fakeController{names: []string{"Discovery"}}
+
+	out := run(t, ctrl, "library", "albums", "--json")
+
+	assert.Equal(t, []string{"Albums"}, ctrl.calls)
+	assert.Contains(t, out, `["Discovery"]`)
 }
 
 func TestVersionFlag(t *testing.T) {
