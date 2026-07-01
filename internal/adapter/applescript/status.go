@@ -41,18 +41,13 @@ JSON.stringify(out);
 
 // statusDTO mirrors the JSON emitted by statusScript.
 type statusDTO struct {
-	Running bool    `json:"running"`
-	State   string  `json:"state"`
-	Volume  int     `json:"volume"`
-	Shuffle bool    `json:"shuffle"`
-	Repeat  string  `json:"repeat"`
-	Elapsed float64 `json:"elapsed"`
-	Track   struct {
-		Name     string  `json:"name"`
-		Artist   string  `json:"artist"`
-		Album    string  `json:"album"`
-		Duration float64 `json:"duration"`
-	} `json:"track"`
+	Running bool     `json:"running"`
+	State   string   `json:"state"`
+	Volume  int      `json:"volume"`
+	Shuffle bool     `json:"shuffle"`
+	Repeat  string   `json:"repeat"`
+	Elapsed float64  `json:"elapsed"`
+	Track   trackDTO `json:"track"`
 }
 
 // parseStatus maps the JSON status payload onto the domain Status. It returns
@@ -83,12 +78,7 @@ func parseStatus(raw []byte) (music.Status, error) {
 		Shuffle: dto.Shuffle,
 		Repeat:  repeat,
 		Elapsed: seconds(dto.Elapsed),
-		Track: music.Track{
-			Name:     dto.Track.Name,
-			Artist:   dto.Track.Artist,
-			Album:    dto.Track.Album,
-			Duration: seconds(dto.Track.Duration),
-		},
+		Track:   dto.Track.toTrack(),
 	}, nil
 }
 

@@ -51,6 +51,51 @@ func RenderStatus(s music.Status, theme Theme) string {
 	return strings.Join(lines, "\n")
 }
 
+// RenderTracks formats a track list, one "Artist — Title (Album)  m:ss" per
+// line, or a short placeholder when the list is empty.
+func RenderTracks(tracks []music.Track) string {
+	if len(tracks) == 0 {
+		return "no matches"
+	}
+
+	lines := make([]string, len(tracks))
+	for i, t := range tracks {
+		line := artistTitle(t)
+		if t.Album != "" {
+			line += " (" + t.Album + ")"
+		}
+		if t.Duration > 0 {
+			line += "  " + FormatClock(t.Duration)
+		}
+		lines[i] = line
+	}
+	return strings.Join(lines, "\n")
+}
+
+// tracksJSON is the stable machine-readable shape of a track list.
+type tracksJSON struct {
+	Name            string  `json:"name"`
+	Artist          string  `json:"artist"`
+	Album           string  `json:"album"`
+	DurationSeconds float64 `json:"duration_seconds"`
+}
+
+// RenderTracksJSON formats a track list as a JSON array.
+func RenderTracksJSON(tracks []music.Track) string {
+	payload := make([]tracksJSON, len(tracks))
+	for i, t := range tracks {
+		payload[i] = tracksJSON{
+			Name:            t.Name,
+			Artist:          t.Artist,
+			Album:           t.Album,
+			DurationSeconds: t.Duration.Seconds(),
+		}
+	}
+
+	out, _ := json.Marshal(payload)
+	return string(out)
+}
+
 // RenderNow formats a one-line now-playing summary: "Artist — Title", or a
 // short placeholder when nothing is loaded.
 func RenderNow(s music.Status) string {

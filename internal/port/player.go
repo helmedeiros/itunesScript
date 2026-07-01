@@ -19,6 +19,9 @@ type Player interface {
 	// Open launches the music application.
 	Open(ctx context.Context) error
 
+	// Search returns library tracks matching query, up to limit (<= 0 for all).
+	Search(ctx context.Context, query string, limit int) ([]music.Track, error)
+
 	// Play resumes or starts playback.
 	Play(ctx context.Context) error
 	// Pause halts playback, keeping the current track loaded.

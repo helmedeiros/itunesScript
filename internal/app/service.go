@@ -5,6 +5,7 @@ package app
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/helmedeiros/amp/internal/music"
 	"github.com/helmedeiros/amp/internal/port"
@@ -34,6 +35,16 @@ func (s *Service) Status(ctx context.Context) (music.Status, error) {
 
 // Open launches the music application.
 func (s *Service) Open(ctx context.Context) error { return s.player.Open(ctx) }
+
+// Search returns library tracks matching query, up to limit (<= 0 for all).
+// The query must be non-empty once trimmed.
+func (s *Service) Search(ctx context.Context, query string, limit int) ([]music.Track, error) {
+	q := strings.TrimSpace(query)
+	if q == "" {
+		return nil, fmt.Errorf("search: empty query")
+	}
+	return s.player.Search(ctx, q, limit)
+}
 
 // Play resumes or starts playback.
 func (s *Service) Play(ctx context.Context) error { return s.player.Play(ctx) }

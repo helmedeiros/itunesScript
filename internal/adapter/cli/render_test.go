@@ -140,6 +140,30 @@ func TestColorThemeStateColors(t *testing.T) {
 	assert.Contains(t, stopped, "\x1b[90m", "stopped is grey")
 }
 
+func TestRenderTracks(t *testing.T) {
+	t.Parallel()
+
+	tracks := []music.Track{
+		{Name: "Gorgon", Artist: "Utsu-P", Album: "X", Duration: 255 * time.Second},
+		{Name: "Solo", Artist: "Nobody"}, // no album, no duration
+	}
+
+	got := cli.RenderTracks(tracks)
+
+	assert.Contains(t, got, "Utsu-P — Gorgon (X)  04:15")
+	assert.Contains(t, got, "Nobody — Solo")
+	assert.NotContains(t, got, "Solo (") // no empty album parens
+	assert.Equal(t, "no matches", cli.RenderTracks(nil))
+}
+
+func TestRenderTracksJSON(t *testing.T) {
+	t.Parallel()
+
+	got := cli.RenderTracksJSON([]music.Track{{Name: "Gorgon", Artist: "Utsu-P", Duration: 255 * time.Second}})
+
+	assert.JSONEq(t, `[{"name":"Gorgon","artist":"Utsu-P","album":"","duration_seconds":255}]`, got)
+}
+
 func TestRenderNow(t *testing.T) {
 	t.Parallel()
 
