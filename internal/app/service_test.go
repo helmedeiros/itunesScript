@@ -29,6 +29,7 @@ func (f *fakePlayer) Status(context.Context) (music.Status, error) {
 	return f.status, f.statusErr
 }
 
+func (f *fakePlayer) Open(context.Context) error  { f.calls = append(f.calls, "Open"); return nil }
 func (f *fakePlayer) Play(context.Context) error  { f.calls = append(f.calls, "Play"); return nil }
 func (f *fakePlayer) Pause(context.Context) error { f.calls = append(f.calls, "Pause"); return nil }
 func (f *fakePlayer) Stop(context.Context) error  { f.calls = append(f.calls, "Stop"); return nil }
@@ -90,6 +91,16 @@ func TestServiceStatusPassesThrough(t *testing.T) {
 
 	require.NoError(t, err)
 	assert.Equal(t, want, got)
+}
+
+func TestServiceOpenDelegates(t *testing.T) {
+	t.Parallel()
+
+	fake := &fakePlayer{}
+	svc := app.NewService(fake, &memStore{})
+
+	require.NoError(t, svc.Open(context.Background()))
+	assert.Equal(t, []string{"Open"}, fake.calls)
 }
 
 func TestServiceTransportDelegates(t *testing.T) {

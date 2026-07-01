@@ -28,6 +28,7 @@ func (f *fakeController) Status(context.Context) (music.Status, error) {
 	f.calls = append(f.calls, "Status")
 	return f.status, nil
 }
+func (f *fakeController) Open(context.Context) error  { f.calls = append(f.calls, "Open"); return nil }
 func (f *fakeController) Play(context.Context) error  { f.calls = append(f.calls, "Play"); return nil }
 func (f *fakeController) Pause(context.Context) error { f.calls = append(f.calls, "Pause"); return nil }
 func (f *fakeController) Toggle(context.Context) error {
@@ -107,6 +108,28 @@ func TestStatusCommandHuman(t *testing.T) {
 	assert.Equal(t, []string{"Status"}, ctrl.calls)
 }
 
+func TestNowCommand(t *testing.T) {
+	t.Parallel()
+
+	ctrl := &fakeController{status: music.Status{
+		State: music.Playing,
+		Track: music.Track{Name: "Gorgon", Artist: "Utsu-P"},
+	}}
+
+	out := run(t, ctrl, "now")
+
+	assert.Equal(t, "Utsu-P — Gorgon\n", out)
+	assert.Equal(t, []string{"Status"}, ctrl.calls)
+}
+
+func TestVersionFlag(t *testing.T) {
+	t.Parallel()
+
+	out := run(t, &fakeController{}, "--version")
+
+	assert.Contains(t, out, "amp version")
+}
+
 func TestStatusCommandJSON(t *testing.T) {
 	t.Parallel()
 
@@ -125,6 +148,7 @@ func TestTransportCommands(t *testing.T) {
 		arg  string
 		want string
 	}{
+		{arg: "open", want: "Open"},
 		{arg: "play", want: "Play"},
 		{arg: "pause", want: "Pause"},
 		{arg: "toggle", want: "Toggle"},

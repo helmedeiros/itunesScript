@@ -140,6 +140,13 @@ func TestColorThemeStateColors(t *testing.T) {
 	assert.Contains(t, stopped, "\x1b[90m", "stopped is grey")
 }
 
+func TestRenderNow(t *testing.T) {
+	t.Parallel()
+
+	assert.Equal(t, "Utsu-P — Gorgon", cli.RenderNow(playingStatus()))
+	assert.Equal(t, "nothing playing", cli.RenderNow(music.Status{State: music.Stopped}))
+}
+
 func TestProgressBar(t *testing.T) {
 	t.Parallel()
 

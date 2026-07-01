@@ -61,6 +61,7 @@ func TestPlayerTransportSendsAppleScript(t *testing.T) {
 		act  func(*Player, context.Context) error
 		want string
 	}{
+		{name: "open", act: (*Player).Open, want: tellMusic("activate")},
 		{name: "play", act: (*Player).Play, want: tellMusic("play")},
 		{name: "pause", act: (*Player).Pause, want: tellMusic("pause")},
 		{name: "toggle", act: (*Player).TogglePlayPause, want: tellMusic("playpause")},

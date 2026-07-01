@@ -11,6 +11,9 @@ import (
 type Controller interface {
 	Status(ctx context.Context) (music.Status, error)
 
+	// Open launches the music application.
+	Open(ctx context.Context) error
+
 	Play(ctx context.Context) error
 	Pause(ctx context.Context) error
 	Toggle(ctx context.Context) error

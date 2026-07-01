@@ -16,6 +16,9 @@ type Player interface {
 	// Status reads a snapshot of the current player state.
 	Status(ctx context.Context) (music.Status, error)
 
+	// Open launches the music application.
+	Open(ctx context.Context) error
+
 	// Play resumes or starts playback.
 	Play(ctx context.Context) error
 	// Pause halts playback, keeping the current track loaded.
