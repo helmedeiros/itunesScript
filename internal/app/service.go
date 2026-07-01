@@ -46,6 +46,11 @@ func (s *Service) Search(ctx context.Context, query string, limit int) ([]music.
 	return s.player.Search(ctx, q, limit)
 }
 
+// Playlists returns the user's playlists.
+func (s *Service) Playlists(ctx context.Context) ([]music.Playlist, error) {
+	return s.player.Playlists(ctx)
+}
+
 // Play resumes or starts playback.
 func (s *Service) Play(ctx context.Context) error { return s.player.Play(ctx) }
 

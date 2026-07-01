@@ -21,6 +21,8 @@ type Player interface {
 
 	// Search returns library tracks matching query, up to limit (<= 0 for all).
 	Search(ctx context.Context, query string, limit int) ([]music.Track, error)
+	// Playlists returns the user's playlists.
+	Playlists(ctx context.Context) ([]music.Playlist, error)
 
 	// Play resumes or starts playback.
 	Play(ctx context.Context) error

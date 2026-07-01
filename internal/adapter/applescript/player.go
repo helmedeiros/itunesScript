@@ -56,6 +56,15 @@ func (p *Player) Search(ctx context.Context, query string, limit int) ([]music.T
 	return parseTracks(out)
 }
 
+// Playlists returns the user's playlists.
+func (p *Player) Playlists(ctx context.Context) ([]music.Playlist, error) {
+	out, err := p.run.Run(ctx, javaScript, playlistsScript)
+	if err != nil {
+		return nil, err
+	}
+	return parsePlaylists(out)
+}
+
 // Play resumes or starts playback.
 func (p *Player) Play(ctx context.Context) error {
 	return p.tell(ctx, "play")

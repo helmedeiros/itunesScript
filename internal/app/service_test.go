@@ -25,6 +25,7 @@ type fakePlayer struct {
 	searchQuery  string
 	searchLimit  int
 	searchResult []music.Track
+	playlists    []music.Playlist
 }
 
 func (f *fakePlayer) Status(context.Context) (music.Status, error) {
@@ -38,6 +39,11 @@ func (f *fakePlayer) Search(_ context.Context, query string, limit int) ([]music
 	f.calls = append(f.calls, "Search")
 	f.searchQuery, f.searchLimit = query, limit
 	return f.searchResult, nil
+}
+
+func (f *fakePlayer) Playlists(context.Context) ([]music.Playlist, error) {
+	f.calls = append(f.calls, "Playlists")
+	return f.playlists, nil
 }
 func (f *fakePlayer) Play(context.Context) error  { f.calls = append(f.calls, "Play"); return nil }
 func (f *fakePlayer) Pause(context.Context) error { f.calls = append(f.calls, "Pause"); return nil }
@@ -126,6 +132,20 @@ func TestServiceSearchRejectsEmptyQuery(t *testing.T) {
 
 	require.Error(t, err)
 	assert.NotContains(t, fake.calls, "Search")
+}
+
+func TestServicePlaylistsDelegates(t *testing.T) {
+	t.Parallel()
+
+	fake := &fakePlayer{playlists: []music.Playlist{{Name: "Chill", Count: 42}}}
+	svc := app.NewService(fake, &memStore{})
+
+	got, err := svc.Playlists(context.Background())
+
+	require.NoError(t, err)
+	require.Len(t, got, 1)
+	assert.Equal(t, "Chill", got[0].Name)
+	assert.Equal(t, []string{"Playlists"}, fake.calls)
 }
 
 func TestServiceOpenDelegates(t *testing.T) {

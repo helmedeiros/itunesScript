@@ -164,6 +164,24 @@ func TestRenderTracksJSON(t *testing.T) {
 	assert.JSONEq(t, `[{"name":"Gorgon","artist":"Utsu-P","album":"","duration_seconds":255}]`, got)
 }
 
+func TestRenderPlaylists(t *testing.T) {
+	t.Parallel()
+
+	got := cli.RenderPlaylists([]music.Playlist{{Name: "Chill", Count: 42}, {Name: "Focus", Count: 7}})
+
+	assert.Contains(t, got, "Chill  (42)")
+	assert.Contains(t, got, "Focus  (7)")
+	assert.Equal(t, "no playlists", cli.RenderPlaylists(nil))
+}
+
+func TestRenderPlaylistsJSON(t *testing.T) {
+	t.Parallel()
+
+	got := cli.RenderPlaylistsJSON([]music.Playlist{{Name: "Chill", Count: 42}})
+
+	assert.JSONEq(t, `[{"name":"Chill","count":42}]`, got)
+}
+
 func TestRenderNow(t *testing.T) {
 	t.Parallel()
 
