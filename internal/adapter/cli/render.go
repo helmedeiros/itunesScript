@@ -96,6 +96,37 @@ func RenderTracksJSON(tracks []music.Track) string {
 	return string(out)
 }
 
+// RenderPlaylists formats a playlist list, one "Name  (N)" per line, or a
+// short placeholder when empty.
+func RenderPlaylists(playlists []music.Playlist) string {
+	if len(playlists) == 0 {
+		return "no playlists"
+	}
+
+	lines := make([]string, len(playlists))
+	for i, p := range playlists {
+		lines[i] = fmt.Sprintf("%s  (%d)", p.Name, p.Count)
+	}
+	return strings.Join(lines, "\n")
+}
+
+// playlistsJSON is the stable machine-readable shape of a playlist list.
+type playlistsJSON struct {
+	Name  string `json:"name"`
+	Count int    `json:"count"`
+}
+
+// RenderPlaylistsJSON formats a playlist list as a JSON array.
+func RenderPlaylistsJSON(playlists []music.Playlist) string {
+	payload := make([]playlistsJSON, len(playlists))
+	for i, p := range playlists {
+		payload[i] = playlistsJSON{Name: p.Name, Count: p.Count}
+	}
+
+	out, _ := json.Marshal(payload)
+	return string(out)
+}
+
 // RenderNow formats a one-line now-playing summary: "Artist — Title", or a
 // short placeholder when nothing is loaded.
 func RenderNow(s music.Status) string {

@@ -32,6 +32,7 @@ func NewRootCmd(ctrl port.Controller) *cobra.Command {
 		statusCmd(ctrl, &noColor),
 		nowCmd(ctrl),
 		searchCmd(ctrl),
+		playlistsCmd(ctrl),
 		transportCmd(ctrl, "open", "Launch Apple Music", port.Controller.Open),
 		transportCmd(ctrl, "play", "Resume or start playback", port.Controller.Play),
 		transportCmd(ctrl, "pause", "Pause playback", port.Controller.Pause),
@@ -100,6 +101,33 @@ func searchCmd(ctrl port.Controller) *cobra.Command {
 		},
 	}
 	cmd.Flags().IntVar(&limit, "limit", 50, "maximum results (0 for all)")
+	cmd.Flags().BoolVar(&asJSON, "json", false, "output machine-readable JSON")
+
+	return cmd
+}
+
+func playlistsCmd(ctrl port.Controller) *cobra.Command {
+	var asJSON bool
+
+	cmd := &cobra.Command{
+		Use:   "playlists",
+		Short: "List your playlists",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			playlists, err := ctrl.Playlists(cmd.Context())
+			if err != nil {
+				return err
+			}
+
+			out := cmd.OutOrStdout()
+			if asJSON {
+				fmt.Fprintln(out, RenderPlaylistsJSON(playlists))
+			} else {
+				fmt.Fprintln(out, RenderPlaylists(playlists))
+			}
+			return nil
+		},
+	}
 	cmd.Flags().BoolVar(&asJSON, "json", false, "output machine-readable JSON")
 
 	return cmd
