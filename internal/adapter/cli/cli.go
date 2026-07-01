@@ -33,6 +33,7 @@ func NewRootCmd(ctrl port.Controller) *cobra.Command {
 		nowCmd(ctrl),
 		searchCmd(ctrl),
 		playlistsCmd(ctrl),
+		libraryCmd(ctrl),
 		transportCmd(ctrl, "open", "Launch Apple Music", port.Controller.Open),
 		transportCmd(ctrl, "play", "Resume or start playback", port.Controller.Play),
 		transportCmd(ctrl, "pause", "Pause playback", port.Controller.Pause),
@@ -101,6 +102,42 @@ func searchCmd(ctrl port.Controller) *cobra.Command {
 		},
 	}
 	cmd.Flags().IntVar(&limit, "limit", 50, "maximum results (0 for all)")
+	cmd.Flags().BoolVar(&asJSON, "json", false, "output machine-readable JSON")
+
+	return cmd
+}
+
+func libraryCmd(ctrl port.Controller) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "library",
+		Short: "Browse the library",
+		Args:  cobra.NoArgs,
+	}
+	cmd.AddCommand(
+		namesSubcmd("artists", "List all artists", ctrl.Artists),
+		namesSubcmd("albums", "List all albums", ctrl.Albums),
+	)
+	return cmd
+}
+
+// namesSubcmd builds a subcommand that prints a list of names fetched from the
+// controller, honoring --json.
+func namesSubcmd(use, short string, fetch func(context.Context) ([]string, error)) *cobra.Command {
+	var asJSON bool
+
+	cmd := &cobra.Command{
+		Use:   use,
+		Short: short,
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			names, err := fetch(cmd.Context())
+			if err != nil {
+				return err
+			}
+			fmt.Fprintln(cmd.OutOrStdout(), RenderNames(names, asJSON))
+			return nil
+		},
+	}
 	cmd.Flags().BoolVar(&asJSON, "json", false, "output machine-readable JSON")
 
 	return cmd

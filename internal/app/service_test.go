@@ -26,6 +26,7 @@ type fakePlayer struct {
 	searchLimit  int
 	searchResult []music.Track
 	playlists    []music.Playlist
+	names        []string
 }
 
 func (f *fakePlayer) Status(context.Context) (music.Status, error) {
@@ -44,6 +45,16 @@ func (f *fakePlayer) Search(_ context.Context, query string, limit int) ([]music
 func (f *fakePlayer) Playlists(context.Context) ([]music.Playlist, error) {
 	f.calls = append(f.calls, "Playlists")
 	return f.playlists, nil
+}
+
+func (f *fakePlayer) Artists(context.Context) ([]string, error) {
+	f.calls = append(f.calls, "Artists")
+	return f.names, nil
+}
+
+func (f *fakePlayer) Albums(context.Context) ([]string, error) {
+	f.calls = append(f.calls, "Albums")
+	return f.names, nil
 }
 func (f *fakePlayer) Play(context.Context) error  { f.calls = append(f.calls, "Play"); return nil }
 func (f *fakePlayer) Pause(context.Context) error { f.calls = append(f.calls, "Pause"); return nil }
@@ -146,6 +157,23 @@ func TestServicePlaylistsDelegates(t *testing.T) {
 	require.Len(t, got, 1)
 	assert.Equal(t, "Chill", got[0].Name)
 	assert.Equal(t, []string{"Playlists"}, fake.calls)
+}
+
+func TestServiceLibraryBrowsersDelegate(t *testing.T) {
+	t.Parallel()
+
+	fake := &fakePlayer{names: []string{"Daft Punk"}}
+	svc := app.NewService(fake, &memStore{})
+
+	artists, err := svc.Artists(context.Background())
+	require.NoError(t, err)
+	assert.Equal(t, []string{"Daft Punk"}, artists)
+
+	albums, err := svc.Albums(context.Background())
+	require.NoError(t, err)
+	assert.Equal(t, []string{"Daft Punk"}, albums)
+
+	assert.Equal(t, []string{"Artists", "Albums"}, fake.calls)
 }
 
 func TestServiceOpenDelegates(t *testing.T) {

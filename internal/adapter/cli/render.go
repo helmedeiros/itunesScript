@@ -96,6 +96,22 @@ func RenderTracksJSON(tracks []music.Track) string {
 	return string(out)
 }
 
+// RenderNames formats a list of names, one per line, or "empty" when there are
+// none. With asJSON it returns a JSON array instead.
+func RenderNames(names []string, asJSON bool) string {
+	if asJSON {
+		if names == nil {
+			names = []string{}
+		}
+		out, _ := json.Marshal(names)
+		return string(out)
+	}
+	if len(names) == 0 {
+		return "empty"
+	}
+	return strings.Join(names, "\n")
+}
+
 // RenderPlaylists formats a playlist list, one "Name  (N)" per line, or a
 // short placeholder when empty.
 func RenderPlaylists(playlists []music.Playlist) string {

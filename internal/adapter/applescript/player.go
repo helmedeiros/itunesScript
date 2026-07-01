@@ -65,6 +65,24 @@ func (p *Player) Playlists(ctx context.Context) ([]music.Playlist, error) {
 	return parsePlaylists(out)
 }
 
+// Artists returns the distinct, sorted artist names in the library.
+func (p *Player) Artists(ctx context.Context) ([]string, error) {
+	return p.names(ctx, "artist")
+}
+
+// Albums returns the distinct, sorted album names in the library.
+func (p *Player) Albums(ctx context.Context) ([]string, error) {
+	return p.names(ctx, "album")
+}
+
+func (p *Player) names(ctx context.Context, field string) ([]string, error) {
+	out, err := p.run.Run(ctx, javaScript, namesScript(field))
+	if err != nil {
+		return nil, err
+	}
+	return parseNames(out)
+}
+
 // Play resumes or starts playback.
 func (p *Player) Play(ctx context.Context) error {
 	return p.tell(ctx, "play")

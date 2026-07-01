@@ -18,6 +18,10 @@ type Controller interface {
 	Search(ctx context.Context, query string, limit int) ([]music.Track, error)
 	// Playlists returns the user's playlists.
 	Playlists(ctx context.Context) ([]music.Playlist, error)
+	// Artists returns the distinct, sorted artist names in the library.
+	Artists(ctx context.Context) ([]string, error)
+	// Albums returns the distinct, sorted album names in the library.
+	Albums(ctx context.Context) ([]string, error)
 
 	Play(ctx context.Context) error
 	Pause(ctx context.Context) error

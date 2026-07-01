@@ -51,6 +51,16 @@ func (s *Service) Playlists(ctx context.Context) ([]music.Playlist, error) {
 	return s.player.Playlists(ctx)
 }
 
+// Artists returns the distinct, sorted artist names in the library.
+func (s *Service) Artists(ctx context.Context) ([]string, error) {
+	return s.player.Artists(ctx)
+}
+
+// Albums returns the distinct, sorted album names in the library.
+func (s *Service) Albums(ctx context.Context) ([]string, error) {
+	return s.player.Albums(ctx)
+}
+
 // Play resumes or starts playback.
 func (s *Service) Play(ctx context.Context) error { return s.player.Play(ctx) }
 
