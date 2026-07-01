@@ -56,6 +56,13 @@ func (p *Player) Search(ctx context.Context, query string, limit int) ([]music.T
 	return parseTracks(out)
 }
 
+// PlaySearch loads the search results into the managed queue, rotated so the
+// track at start is first, and plays from the top.
+func (p *Player) PlaySearch(ctx context.Context, query string, limit, start int) error {
+	_, err := p.run.Run(ctx, javaScript, playSearchScript(query, limit, start))
+	return err
+}
+
 // Playlists returns the user's playlists.
 func (p *Player) Playlists(ctx context.Context) ([]music.Playlist, error) {
 	out, err := p.run.Run(ctx, javaScript, playlistsScript)

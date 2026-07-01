@@ -47,6 +47,19 @@ func (s *Service) Search(ctx context.Context, query string, limit int) ([]music.
 	return s.player.Search(ctx, q, limit)
 }
 
+// PlaySearch plays the search results starting at the given index, queueing the
+// rest. The query must be non-empty and start must be within range.
+func (s *Service) PlaySearch(ctx context.Context, query string, limit, start int) error {
+	q := strings.TrimSpace(query)
+	if q == "" {
+		return fmt.Errorf("play: empty query")
+	}
+	if start < 0 {
+		return fmt.Errorf("play: negative start index %d", start)
+	}
+	return s.player.PlaySearch(ctx, q, limit, start)
+}
+
 // Playlists returns the user's playlists.
 func (s *Service) Playlists(ctx context.Context) ([]music.Playlist, error) {
 	return s.player.Playlists(ctx)

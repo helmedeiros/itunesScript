@@ -60,16 +60,22 @@ func RenderTracks(tracks []music.Track) string {
 
 	lines := make([]string, len(tracks))
 	for i, t := range tracks {
-		line := artistTitle(t)
-		if t.Album != "" {
-			line += " (" + t.Album + ")"
-		}
-		if t.Duration > 0 {
-			line += "  " + FormatClock(t.Duration)
-		}
-		lines[i] = line
+		lines[i] = trackLine(t)
 	}
 	return strings.Join(lines, "\n")
+}
+
+// trackLine formats one track as "Artist — Title (Album)  m:ss", omitting the
+// album and duration when unknown.
+func trackLine(t music.Track) string {
+	line := artistTitle(t)
+	if t.Album != "" {
+		line += " (" + t.Album + ")"
+	}
+	if t.Duration > 0 {
+		line += "  " + FormatClock(t.Duration)
+	}
+	return line
 }
 
 // tracksJSON is the stable machine-readable shape of a track list.

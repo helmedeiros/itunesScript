@@ -21,6 +21,9 @@ type Player interface {
 
 	// Search returns library tracks matching query, up to limit (<= 0 for all).
 	Search(ctx context.Context, query string, limit int) ([]music.Track, error)
+	// PlaySearch loads the search results into the queue rotated so the track at
+	// start is first, and plays from the top.
+	PlaySearch(ctx context.Context, query string, limit, start int) error
 	// Playlists returns the user's playlists.
 	Playlists(ctx context.Context) ([]music.Playlist, error)
 	// Artists returns the distinct, sorted artist names in the library.
