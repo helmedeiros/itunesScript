@@ -31,6 +31,7 @@ type fakeController struct {
 	seekMode     music.SeekMode
 	seekValue    float64
 	seekRet      time.Duration
+	playStart    int
 }
 
 func (f *fakeController) Status(context.Context) (music.Status, error) {
@@ -43,6 +44,12 @@ func (f *fakeController) Search(_ context.Context, query string, limit int) ([]m
 	f.calls = append(f.calls, "Search")
 	f.searchQuery, f.searchLimit = query, limit
 	return f.searchResult, nil
+}
+
+func (f *fakeController) PlaySearch(_ context.Context, query string, limit, start int) error {
+	f.calls = append(f.calls, "PlaySearch")
+	f.searchQuery, f.searchLimit, f.playStart = query, limit, start
+	return nil
 }
 
 func (f *fakeController) Playlists(context.Context) ([]music.Playlist, error) {

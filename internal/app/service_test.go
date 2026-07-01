@@ -29,6 +29,7 @@ type fakePlayer struct {
 	playlists    []music.Playlist
 	names        []string
 	positionSet  float64
+	playStart    int
 }
 
 func (f *fakePlayer) Status(context.Context) (music.Status, error) {
@@ -42,6 +43,12 @@ func (f *fakePlayer) Search(_ context.Context, query string, limit int) ([]music
 	f.calls = append(f.calls, "Search")
 	f.searchQuery, f.searchLimit = query, limit
 	return f.searchResult, nil
+}
+
+func (f *fakePlayer) PlaySearch(_ context.Context, query string, limit, start int) error {
+	f.calls = append(f.calls, "PlaySearch")
+	f.searchQuery, f.searchLimit, f.playStart = query, limit, start
+	return nil
 }
 
 func (f *fakePlayer) Playlists(context.Context) ([]music.Playlist, error) {
@@ -151,6 +158,30 @@ func TestServiceSearchRejectsEmptyQuery(t *testing.T) {
 
 	require.Error(t, err)
 	assert.NotContains(t, fake.calls, "Search")
+}
+
+func TestServicePlaySearchTrimsAndDelegates(t *testing.T) {
+	t.Parallel()
+
+	fake := &fakePlayer{}
+	svc := app.NewService(fake, &memStore{})
+
+	require.NoError(t, svc.PlaySearch(context.Background(), "  utsu  ", 50, 3))
+
+	assert.Equal(t, "utsu", fake.searchQuery)
+	assert.Equal(t, 50, fake.searchLimit)
+	assert.Equal(t, 3, fake.playStart)
+}
+
+func TestServicePlaySearchRejectsBadInput(t *testing.T) {
+	t.Parallel()
+
+	fake := &fakePlayer{}
+	svc := app.NewService(fake, &memStore{})
+
+	require.Error(t, svc.PlaySearch(context.Background(), "   ", 50, 0))
+	require.Error(t, svc.PlaySearch(context.Background(), "utsu", 50, -1))
+	assert.NotContains(t, fake.calls, "PlaySearch")
 }
 
 func TestServicePlaylistsDelegates(t *testing.T) {

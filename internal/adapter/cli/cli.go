@@ -10,6 +10,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/helmedeiros/amp/internal/adapter/tui"
 	"github.com/helmedeiros/amp/internal/music"
 	"github.com/helmedeiros/amp/internal/port"
 )
@@ -79,31 +80,59 @@ func nowCmd(ctrl port.Controller) *cobra.Command {
 
 func searchCmd(ctrl port.Controller) *cobra.Command {
 	var (
-		limit  int
-		asJSON bool
+		limit         int
+		asJSON        bool
+		noInteractive bool
 	)
 
 	cmd := &cobra.Command{
 		Use:   "search <query>",
-		Short: "Search the library",
+		Short: "Search the library and play a result (interactive on a terminal)",
 		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			tracks, err := ctrl.Search(cmd.Context(), strings.Join(args, " "), limit)
+			query := strings.Join(args, " ")
+			tracks, err := ctrl.Search(cmd.Context(), query, limit)
 			if err != nil {
 				return err
 			}
 
 			out := cmd.OutOrStdout()
+
+			// Plain, scriptable output when asked for JSON, told not to be
+			// interactive, or not writing to a terminal.
 			if asJSON {
 				fmt.Fprintln(out, RenderTracksJSON(tracks))
-			} else {
-				fmt.Fprintln(out, RenderTracks(tracks))
+				return nil
 			}
+			if noInteractive || !isTerminal(out) || len(tracks) == 0 {
+				fmt.Fprintln(out, RenderTracks(tracks))
+				return nil
+			}
+
+			// Interactive: pick a starting track; the whole list becomes the
+			// queue, playback starts at the pick, the rest play next.
+			items := make([]string, len(tracks))
+			for i, t := range tracks {
+				items[i] = trackLine(t)
+			}
+			idx, ok, err := tui.Pick("Search: "+query, items)
+			if err != nil {
+				return err
+			}
+			if !ok {
+				return nil // cancelled
+			}
+			if err := ctrl.PlaySearch(cmd.Context(), query, limit, idx); err != nil {
+				return err
+			}
+
+			fmt.Fprintf(out, "▶ %s\n", trackLine(tracks[idx]))
 			return nil
 		},
 	}
 	cmd.Flags().IntVar(&limit, "limit", 50, "maximum results (0 for all)")
 	cmd.Flags().BoolVar(&asJSON, "json", false, "output machine-readable JSON")
+	cmd.Flags().BoolVar(&noInteractive, "no-interactive", false, "print the list instead of the interactive picker")
 
 	return cmd
 }
@@ -275,6 +304,11 @@ func wantsColor(w io.Writer, noColor bool) bool {
 	if noColor || os.Getenv("NO_COLOR") != "" {
 		return false
 	}
+	return isTerminal(w)
+}
+
+// isTerminal reports whether w is a character device (an interactive terminal).
+func isTerminal(w io.Writer) bool {
 	f, ok := w.(*os.File)
 	if !ok {
 		return false
