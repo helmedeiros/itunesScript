@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"runtime/debug"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -30,6 +31,7 @@ func NewRootCmd(ctrl port.Controller) *cobra.Command {
 	root.AddCommand(
 		statusCmd(ctrl, &noColor),
 		nowCmd(ctrl),
+		searchCmd(ctrl),
 		transportCmd(ctrl, "open", "Launch Apple Music", port.Controller.Open),
 		transportCmd(ctrl, "play", "Resume or start playback", port.Controller.Play),
 		transportCmd(ctrl, "pause", "Pause playback", port.Controller.Pause),
@@ -70,6 +72,37 @@ func nowCmd(ctrl port.Controller) *cobra.Command {
 			return nil
 		},
 	}
+}
+
+func searchCmd(ctrl port.Controller) *cobra.Command {
+	var (
+		limit  int
+		asJSON bool
+	)
+
+	cmd := &cobra.Command{
+		Use:   "search <query>",
+		Short: "Search the library",
+		Args:  cobra.MinimumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			tracks, err := ctrl.Search(cmd.Context(), strings.Join(args, " "), limit)
+			if err != nil {
+				return err
+			}
+
+			out := cmd.OutOrStdout()
+			if asJSON {
+				fmt.Fprintln(out, RenderTracksJSON(tracks))
+			} else {
+				fmt.Fprintln(out, RenderTracks(tracks))
+			}
+			return nil
+		},
+	}
+	cmd.Flags().IntVar(&limit, "limit", 50, "maximum results (0 for all)")
+	cmd.Flags().BoolVar(&asJSON, "json", false, "output machine-readable JSON")
+
+	return cmd
 }
 
 func muteCmd(ctrl port.Controller) *cobra.Command {

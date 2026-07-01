@@ -14,6 +14,9 @@ type Controller interface {
 	// Open launches the music application.
 	Open(ctx context.Context) error
 
+	// Search returns library tracks matching query, up to limit (<= 0 for all).
+	Search(ctx context.Context, query string, limit int) ([]music.Track, error)
+
 	Play(ctx context.Context) error
 	Pause(ctx context.Context) error
 	Toggle(ctx context.Context) error

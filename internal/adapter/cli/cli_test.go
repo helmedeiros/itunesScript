@@ -14,21 +14,30 @@ import (
 
 // fakeController records calls and returns canned data.
 type fakeController struct {
-	status     music.Status
-	calls      []string
-	setLevel   int
-	adjustBy   int
-	volRet     music.Volume
-	shuffleSet bool
-	shuffleRet bool
-	repeatSet  music.RepeatMode
+	status       music.Status
+	calls        []string
+	setLevel     int
+	adjustBy     int
+	volRet       music.Volume
+	shuffleSet   bool
+	shuffleRet   bool
+	repeatSet    music.RepeatMode
+	searchQuery  string
+	searchLimit  int
+	searchResult []music.Track
 }
 
 func (f *fakeController) Status(context.Context) (music.Status, error) {
 	f.calls = append(f.calls, "Status")
 	return f.status, nil
 }
-func (f *fakeController) Open(context.Context) error  { f.calls = append(f.calls, "Open"); return nil }
+func (f *fakeController) Open(context.Context) error { f.calls = append(f.calls, "Open"); return nil }
+
+func (f *fakeController) Search(_ context.Context, query string, limit int) ([]music.Track, error) {
+	f.calls = append(f.calls, "Search")
+	f.searchQuery, f.searchLimit = query, limit
+	return f.searchResult, nil
+}
 func (f *fakeController) Play(context.Context) error  { f.calls = append(f.calls, "Play"); return nil }
 func (f *fakeController) Pause(context.Context) error { f.calls = append(f.calls, "Pause"); return nil }
 func (f *fakeController) Toggle(context.Context) error {
@@ -120,6 +129,30 @@ func TestNowCommand(t *testing.T) {
 
 	assert.Equal(t, "Utsu-P — Gorgon\n", out)
 	assert.Equal(t, []string{"Status"}, ctrl.calls)
+}
+
+func TestSearchCommand(t *testing.T) {
+	t.Parallel()
+
+	ctrl := &fakeController{searchResult: []music.Track{{Name: "Gorgon", Artist: "Utsu-P"}}}
+
+	out := run(t, ctrl, "search", "utsu", "p")
+
+	assert.Equal(t, []string{"Search"}, ctrl.calls)
+	assert.Equal(t, "utsu p", ctrl.searchQuery, "args are joined into the query")
+	assert.Equal(t, 50, ctrl.searchLimit, "default limit")
+	assert.Contains(t, out, "Utsu-P — Gorgon")
+}
+
+func TestSearchCommandJSONAndLimit(t *testing.T) {
+	t.Parallel()
+
+	ctrl := &fakeController{searchResult: []music.Track{{Name: "Gorgon", Artist: "Utsu-P"}}}
+
+	out := run(t, ctrl, "search", "--json", "--limit", "5", "utsu")
+
+	assert.Equal(t, 5, ctrl.searchLimit)
+	assert.Contains(t, out, `"name":"Gorgon"`)
 }
 
 func TestVersionFlag(t *testing.T) {

@@ -15,13 +15,16 @@ import (
 // fakePlayer is a hand-rolled in-memory Player for testing the service in
 // isolation from any real engine.
 type fakePlayer struct {
-	status     music.Status
-	statusErr  error
-	volumeSet  *music.Volume
-	shuffleSet *bool
-	repeatSet  *music.RepeatMode
-	calls      []string
-	setVolErr  error
+	status       music.Status
+	statusErr    error
+	volumeSet    *music.Volume
+	shuffleSet   *bool
+	repeatSet    *music.RepeatMode
+	calls        []string
+	setVolErr    error
+	searchQuery  string
+	searchLimit  int
+	searchResult []music.Track
 }
 
 func (f *fakePlayer) Status(context.Context) (music.Status, error) {
@@ -29,7 +32,13 @@ func (f *fakePlayer) Status(context.Context) (music.Status, error) {
 	return f.status, f.statusErr
 }
 
-func (f *fakePlayer) Open(context.Context) error  { f.calls = append(f.calls, "Open"); return nil }
+func (f *fakePlayer) Open(context.Context) error { f.calls = append(f.calls, "Open"); return nil }
+
+func (f *fakePlayer) Search(_ context.Context, query string, limit int) ([]music.Track, error) {
+	f.calls = append(f.calls, "Search")
+	f.searchQuery, f.searchLimit = query, limit
+	return f.searchResult, nil
+}
 func (f *fakePlayer) Play(context.Context) error  { f.calls = append(f.calls, "Play"); return nil }
 func (f *fakePlayer) Pause(context.Context) error { f.calls = append(f.calls, "Pause"); return nil }
 func (f *fakePlayer) Stop(context.Context) error  { f.calls = append(f.calls, "Stop"); return nil }
@@ -91,6 +100,32 @@ func TestServiceStatusPassesThrough(t *testing.T) {
 
 	require.NoError(t, err)
 	assert.Equal(t, want, got)
+}
+
+func TestServiceSearchTrimsAndDelegates(t *testing.T) {
+	t.Parallel()
+
+	fake := &fakePlayer{searchResult: []music.Track{{Name: "Gorgon"}}}
+	svc := app.NewService(fake, &memStore{})
+
+	got, err := svc.Search(context.Background(), "  utsu  ", 10)
+
+	require.NoError(t, err)
+	require.Len(t, got, 1)
+	assert.Equal(t, "utsu", fake.searchQuery, "query is trimmed before search")
+	assert.Equal(t, 10, fake.searchLimit)
+}
+
+func TestServiceSearchRejectsEmptyQuery(t *testing.T) {
+	t.Parallel()
+
+	fake := &fakePlayer{}
+	svc := app.NewService(fake, &memStore{})
+
+	_, err := svc.Search(context.Background(), "   ", 10)
+
+	require.Error(t, err)
+	assert.NotContains(t, fake.calls, "Search")
 }
 
 func TestServiceOpenDelegates(t *testing.T) {

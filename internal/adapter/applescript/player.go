@@ -47,6 +47,15 @@ func (p *Player) Open(ctx context.Context) error {
 	return p.tell(ctx, "activate")
 }
 
+// Search returns library tracks matching query, up to limit (<= 0 for all).
+func (p *Player) Search(ctx context.Context, query string, limit int) ([]music.Track, error) {
+	out, err := p.run.Run(ctx, javaScript, searchScript(query, limit))
+	if err != nil {
+		return nil, err
+	}
+	return parseTracks(out)
+}
+
 // Play resumes or starts playback.
 func (p *Player) Play(ctx context.Context) error {
 	return p.tell(ctx, "play")
