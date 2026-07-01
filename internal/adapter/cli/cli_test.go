@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -27,6 +28,9 @@ type fakeController struct {
 	searchResult []music.Track
 	playlists    []music.Playlist
 	names        []string
+	seekMode     music.SeekMode
+	seekValue    float64
+	seekRet      time.Duration
 }
 
 func (f *fakeController) Status(context.Context) (music.Status, error) {
@@ -78,6 +82,12 @@ func (f *fakeController) AdjustVolume(_ context.Context, delta int) (music.Volum
 	f.calls = append(f.calls, "AdjustVolume")
 	f.adjustBy = delta
 	return f.volRet, nil
+}
+
+func (f *fakeController) Seek(_ context.Context, mode music.SeekMode, value float64) (time.Duration, error) {
+	f.calls = append(f.calls, "Seek")
+	f.seekMode, f.seekValue = mode, value
+	return f.seekRet, nil
 }
 
 func (f *fakeController) SetShuffle(_ context.Context, enabled bool) error {
@@ -283,6 +293,31 @@ func TestVolCommandRelative(t *testing.T) {
 
 	assert.Equal(t, []string{"AdjustVolume"}, ctrl.calls)
 	assert.Equal(t, 10, ctrl.adjustBy)
+}
+
+func TestSeekCommand(t *testing.T) {
+	t.Parallel()
+
+	ctrl := &fakeController{seekRet: 90 * time.Second}
+
+	out := run(t, ctrl, "seek", "1:30")
+
+	assert.Equal(t, []string{"Seek"}, ctrl.calls)
+	assert.Equal(t, music.SeekAbsolute, ctrl.seekMode)
+	assert.InDelta(t, 90, ctrl.seekValue, 0.001)
+	assert.Contains(t, out, "position 01:30")
+}
+
+func TestSeekCommandRelativeNegative(t *testing.T) {
+	t.Parallel()
+
+	ctrl := &fakeController{seekRet: 80 * time.Second}
+
+	// A leading-dash argument must reach the command, not be parsed as a flag.
+	run(t, ctrl, "seek", "-10")
+
+	assert.Equal(t, music.SeekRelative, ctrl.seekMode)
+	assert.InDelta(t, -10, ctrl.seekValue, 0.001)
 }
 
 func TestVolCommandRelativeNegative(t *testing.T) {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -27,6 +28,7 @@ type fakePlayer struct {
 	searchResult []music.Track
 	playlists    []music.Playlist
 	names        []string
+	positionSet  float64
 }
 
 func (f *fakePlayer) Status(context.Context) (music.Status, error) {
@@ -76,6 +78,12 @@ func (f *fakePlayer) SetVolume(_ context.Context, v music.Volume) error {
 		return f.setVolErr
 	}
 	f.volumeSet = &v
+	return nil
+}
+
+func (f *fakePlayer) SetPosition(_ context.Context, seconds float64) error {
+	f.calls = append(f.calls, "SetPosition")
+	f.positionSet = seconds
 	return nil
 }
 
@@ -174,6 +182,63 @@ func TestServiceLibraryBrowsersDelegate(t *testing.T) {
 	assert.Equal(t, []string{"Daft Punk"}, albums)
 
 	assert.Equal(t, []string{"Artists", "Albums"}, fake.calls)
+}
+
+func TestServiceSeekAbsolute(t *testing.T) {
+	t.Parallel()
+
+	fake := &fakePlayer{}
+	svc := app.NewService(fake, &memStore{})
+
+	pos, err := svc.Seek(context.Background(), music.SeekAbsolute, 42)
+
+	require.NoError(t, err)
+	assert.Equal(t, 42*time.Second, pos)
+	assert.InDelta(t, 42, fake.positionSet, 0.001)
+	assert.NotContains(t, fake.calls, "Status", "absolute seek needs no read")
+}
+
+func TestServiceSeekRelativeReadsCurrent(t *testing.T) {
+	t.Parallel()
+
+	fake := &fakePlayer{status: music.Status{
+		Elapsed: 100 * time.Second,
+		Track:   music.Track{Duration: 240 * time.Second},
+	}}
+	svc := app.NewService(fake, &memStore{})
+
+	pos, err := svc.Seek(context.Background(), music.SeekRelative, -10)
+
+	require.NoError(t, err)
+	assert.Equal(t, 90*time.Second, pos)
+	assert.Equal(t, []string{"Status", "SetPosition"}, fake.calls)
+}
+
+func TestServiceSeekPercent(t *testing.T) {
+	t.Parallel()
+
+	fake := &fakePlayer{status: music.Status{Track: music.Track{Duration: 200 * time.Second}}}
+	svc := app.NewService(fake, &memStore{})
+
+	pos, err := svc.Seek(context.Background(), music.SeekPercent, 25)
+
+	require.NoError(t, err)
+	assert.Equal(t, 50*time.Second, pos)
+}
+
+func TestServiceSeekClampsToTrackBounds(t *testing.T) {
+	t.Parallel()
+
+	fake := &fakePlayer{status: music.Status{
+		Elapsed: 230 * time.Second,
+		Track:   music.Track{Duration: 240 * time.Second},
+	}}
+	svc := app.NewService(fake, &memStore{})
+
+	pos, err := svc.Seek(context.Background(), music.SeekRelative, 60) // 230+60 > 240
+
+	require.NoError(t, err)
+	assert.Equal(t, 240*time.Second, pos, "clamped to duration")
 }
 
 func TestServiceOpenDelegates(t *testing.T) {

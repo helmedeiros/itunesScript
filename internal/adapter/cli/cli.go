@@ -42,6 +42,7 @@ func NewRootCmd(ctrl port.Controller) *cobra.Command {
 		transportCmd(ctrl, "next", "Skip to the next track", port.Controller.Next),
 		transportCmd(ctrl, "prev", "Skip to the previous track", port.Controller.Previous),
 		volCmd(ctrl),
+		seekCmd(ctrl),
 		muteCmd(ctrl),
 		unmuteCmd(ctrl),
 		shuffleCmd(ctrl),
@@ -168,6 +169,33 @@ func playlistsCmd(ctrl port.Controller) *cobra.Command {
 	cmd.Flags().BoolVar(&asJSON, "json", false, "output machine-readable JSON")
 
 	return cmd
+}
+
+func seekCmd(ctrl port.Controller) *cobra.Command {
+	return &cobra.Command{
+		Use:   "seek <seconds|mm:ss|+n|-n|n%>",
+		Short: "Move the playback position",
+		Args:  cobra.ExactArgs(1),
+		// A relative argument like "-10" would otherwise be parsed as flags.
+		DisableFlagParsing: true,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if args[0] == "-h" || args[0] == "--help" {
+				return cmd.Help()
+			}
+
+			mode, value, err := parseSeekArg(args[0])
+			if err != nil {
+				return err
+			}
+			pos, err := ctrl.Seek(cmd.Context(), mode, value)
+			if err != nil {
+				return err
+			}
+
+			fmt.Fprintf(cmd.OutOrStdout(), "position %s\n", FormatClock(pos))
+			return nil
+		},
+	}
 }
 
 func muteCmd(ctrl port.Controller) *cobra.Command {
