@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/helmedeiros/amp/internal/music"
 	"github.com/helmedeiros/amp/internal/port"
@@ -128,6 +129,45 @@ func (s *Service) AdjustVolume(ctx context.Context, delta int) (music.Volume, er
 		return 0, fmt.Errorf("set volume: %w", err)
 	}
 	return v, nil
+}
+
+// Seek moves the player position and returns the new position. Relative and
+// percentage seeks read the current status first to resolve the target; the
+// result is clamped to the start of the track (and to its end when the
+// duration is known).
+func (s *Service) Seek(ctx context.Context, mode music.SeekMode, value float64) (time.Duration, error) {
+	var (
+		pos      float64
+		duration float64
+	)
+
+	switch mode {
+	case music.SeekAbsolute:
+		pos = value
+	case music.SeekRelative, music.SeekPercent:
+		status, err := s.player.Status(ctx)
+		if err != nil {
+			return 0, fmt.Errorf("read position: %w", err)
+		}
+		duration = status.Track.Duration.Seconds()
+		if mode == music.SeekRelative {
+			pos = status.Elapsed.Seconds() + value
+		} else {
+			pos = duration * value / 100
+		}
+	}
+
+	if pos < 0 {
+		pos = 0
+	}
+	if duration > 0 && pos > duration {
+		pos = duration
+	}
+
+	if err := s.player.SetPosition(ctx, pos); err != nil {
+		return 0, fmt.Errorf("seek: %w", err)
+	}
+	return time.Duration(pos * float64(time.Second)), nil
 }
 
 // Mute remembers the current volume and sets it to zero. If the volume is

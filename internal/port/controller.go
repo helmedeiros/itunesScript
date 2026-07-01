@@ -2,6 +2,7 @@ package port
 
 import (
 	"context"
+	"time"
 
 	"github.com/helmedeiros/amp/internal/music"
 )
@@ -34,6 +35,9 @@ type Controller interface {
 	SetVolume(ctx context.Context, level int) (music.Volume, error)
 	// AdjustVolume shifts the level by delta and returns the new volume.
 	AdjustVolume(ctx context.Context, delta int) (music.Volume, error)
+
+	// Seek moves the player position per mode/value and returns the new position.
+	Seek(ctx context.Context, mode music.SeekMode, value float64) (time.Duration, error)
 
 	// SetShuffle enables or disables shuffle.
 	SetShuffle(ctx context.Context, enabled bool) error

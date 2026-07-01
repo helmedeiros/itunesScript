@@ -99,6 +99,18 @@ func TestPlayerSetVolumeScript(t *testing.T) {
 	assert.Equal(t, tellMusic("set sound volume to 42"), fake.calls[0].script)
 }
 
+func TestPlayerSetPositionScript(t *testing.T) {
+	t.Parallel()
+
+	fake := &fakeRunner{}
+	p := newPlayer(fake)
+
+	require.NoError(t, p.SetPosition(context.Background(), 90.5))
+
+	require.Len(t, fake.calls, 1)
+	assert.Equal(t, tellMusic("set player position to 90.5"), fake.calls[0].script)
+}
+
 func TestPlayerSetShuffleScript(t *testing.T) {
 	t.Parallel()
 

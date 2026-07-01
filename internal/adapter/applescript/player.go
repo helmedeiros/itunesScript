@@ -118,6 +118,11 @@ func (p *Player) SetVolume(ctx context.Context, v music.Volume) error {
 	return p.tell(ctx, fmt.Sprintf("set sound volume to %d", v.Int()))
 }
 
+// SetPosition moves the player to an absolute position, in seconds.
+func (p *Player) SetPosition(ctx context.Context, seconds float64) error {
+	return p.tell(ctx, fmt.Sprintf("set player position to %g", seconds))
+}
+
 // SetShuffle enables or disables shuffle.
 func (p *Player) SetShuffle(ctx context.Context, enabled bool) error {
 	return p.tell(ctx, fmt.Sprintf("set shuffle enabled to %t", enabled))

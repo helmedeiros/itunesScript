@@ -43,6 +43,8 @@ type Player interface {
 
 	// SetVolume sets the sound volume.
 	SetVolume(ctx context.Context, v music.Volume) error
+	// SetPosition moves the player to an absolute position, in seconds.
+	SetPosition(ctx context.Context, seconds float64) error
 	// SetShuffle enables or disables shuffle.
 	SetShuffle(ctx context.Context, enabled bool) error
 	// SetRepeat sets the repeat mode.
