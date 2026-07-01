@@ -51,6 +51,15 @@ func RenderStatus(s music.Status, theme Theme) string {
 	return strings.Join(lines, "\n")
 }
 
+// RenderNow formats a one-line now-playing summary: "Artist — Title", or a
+// short placeholder when nothing is loaded.
+func RenderNow(s music.Status) string {
+	if !s.HasTrack() {
+		return "nothing playing"
+	}
+	return artistTitle(s.Track)
+}
+
 // artistTitle joins artist and title, or returns the title alone when the
 // artist is unknown.
 func artistTitle(t music.Track) string {

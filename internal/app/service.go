@@ -32,6 +32,9 @@ func (s *Service) Status(ctx context.Context) (music.Status, error) {
 	return s.player.Status(ctx)
 }
 
+// Open launches the music application.
+func (s *Service) Open(ctx context.Context) error { return s.player.Open(ctx) }
+
 // Play resumes or starts playback.
 func (s *Service) Play(ctx context.Context) error { return s.player.Play(ctx) }
 

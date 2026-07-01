@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime/debug"
 
 	"github.com/spf13/cobra"
 
@@ -20,6 +21,7 @@ func NewRootCmd(ctrl port.Controller) *cobra.Command {
 	root := &cobra.Command{
 		Use:           "amp",
 		Short:         "Control Apple Music from the terminal",
+		Version:       buildVersion(),
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
@@ -27,6 +29,8 @@ func NewRootCmd(ctrl port.Controller) *cobra.Command {
 
 	root.AddCommand(
 		statusCmd(ctrl, &noColor),
+		nowCmd(ctrl),
+		transportCmd(ctrl, "open", "Launch Apple Music", port.Controller.Open),
 		transportCmd(ctrl, "play", "Resume or start playback", port.Controller.Play),
 		transportCmd(ctrl, "pause", "Pause playback", port.Controller.Pause),
 		transportCmd(ctrl, "toggle", "Toggle play/pause", port.Controller.Toggle),
@@ -41,6 +45,31 @@ func NewRootCmd(ctrl port.Controller) *cobra.Command {
 	)
 
 	return root
+}
+
+// buildVersion reports the module version this binary was built from, falling
+// back to "dev" for local builds without version metadata.
+func buildVersion() string {
+	if info, ok := debug.ReadBuildInfo(); ok && info.Main.Version != "" {
+		return info.Main.Version
+	}
+	return "dev"
+}
+
+func nowCmd(ctrl port.Controller) *cobra.Command {
+	return &cobra.Command{
+		Use:   "now",
+		Short: "Print the current track on one line",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			s, err := ctrl.Status(cmd.Context())
+			if err != nil {
+				return err
+			}
+			fmt.Fprintln(cmd.OutOrStdout(), RenderNow(s))
+			return nil
+		},
+	}
 }
 
 func muteCmd(ctrl port.Controller) *cobra.Command {

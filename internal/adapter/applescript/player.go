@@ -42,6 +42,11 @@ func (p *Player) Status(ctx context.Context) (music.Status, error) {
 	return parseStatus(out)
 }
 
+// Open launches Music.app and brings it to the front.
+func (p *Player) Open(ctx context.Context) error {
+	return p.tell(ctx, "activate")
+}
+
 // Play resumes or starts playback.
 func (p *Player) Play(ctx context.Context) error {
 	return p.tell(ctx, "play")
